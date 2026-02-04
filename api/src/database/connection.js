@@ -1,9 +1,7 @@
 const mongoose = require('mongoose')
-const URI =" "
+require('dotenv').config()
 
-mongoose.set('useNewUrlParser',true)
-mongoose.set('useFindAndModify',false)
-mongoose.set('useCreateIndex',true)
-mongoose.set('useUnifiedTopology',true)
+const { DB_URI } = process.env
+const URI = DB_URI
 
 mongoose.connect(URI).then(db => console.log('DB is connected')).catch(err => console.error(err))
