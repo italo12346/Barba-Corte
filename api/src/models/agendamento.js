@@ -1,48 +1,115 @@
-const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
 
-const agendamento = new Schema({
-    servicoId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Servico',
-        required: true,
+/*
+=====================
+SUBDOCUMENTO PAGAMENTO
+=====================
+*/
+const pagamentoSchema = new Schema(
+  {
+    mpPaymentId: {
+      type: String,
+      index: true,
     },
+
+    valor: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    metodo: {
+      type: String,
+      enum: ["pix"],
+      default: "pix",
+    },
+
+    status: {
+      type: String,
+      enum: ["pendente", "aprovado", "cancelado", "expirado"],
+      default: "pendente",
+    },
+
+    criadoEm: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
+
+/*
+=====================
+AGENDAMENTO
+=====================
+*/
+const agendamentoSchema = new Schema(
+  {
+    salaoId: {
+  type: Schema.Types.ObjectId,
+  ref: "Salao",
+  required: true,
+  index: true,
+},
+
+    servicoId: {
+      type: Schema.Types.ObjectId,
+      ref: "Servico",
+      required: true,
+      index: true,
+    },
+
     clienteId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Cliente',
-        required: true,
+      type: Schema.Types.ObjectId,
+      ref: "Cliente",
+      required: true,
+      index: true,
     },
-    servicoId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Servico',
-        required: true,
-    },
+
     colaboradorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Colaborador',
-        required: true,
+      type: Schema.Types.ObjectId,
+      ref: "Colaborador",
+      required: true,
+      index: true,
     },
+
     dataAgendamento: {
-        type: Date,
-        required: true,
+      type: Date,
+      required: true,
     },
-   comissao: {
-        type: Number,
-        required: true,
-    },
+
+    // 🔹 snapshot financeiro
     valorServico: {
-        type: Number,
-        required: true,
+      type: Number,
+      required: true,
+      min: 0,
     },
-    transactionalId: {
-        type: String,
-        required: true,
+
+    comissao: {
+      type: Number,
+      required: true,
+      min: 0,
     },
+
+    // 🔥 pagamento embutido
+    pagamento: pagamentoSchema,
+
+    status: {
+      type: String,
+      enum: ["aguardando_pagamento", "confirmado", "cancelado"],
+      default: "aguardando_pagamento",
+      index: true,
+    },
+
     dataVinculo: {
-        type: Date,
-        default: Date.now
-    }
-})
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-
-module.exports = mongoose.model('Agendamento', agendamento)
+module.exports = mongoose.model("Agendamento", agendamentoSchema);
