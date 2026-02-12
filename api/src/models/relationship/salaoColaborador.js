@@ -1,23 +1,39 @@
-const mongoose = require('mongoose')
-const Schema = mongoose.Schema
+const mongoose = require("mongoose");
 
-const SalaoColaborador = new Schema({
+const SalaoColaboradorSchema = new mongoose.Schema(
+  {
     salaoId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Salao',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Salao",
+      required: true,
     },
+
     colaboradorId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Colaborador',
-        required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Colaborador",
+      required: true,
     },
-    status: {type: String, enum: ['ATIVO', 'INATIVO'], default: 'ATIVO'},
-    dataVinculo: {
-        type: Date,
-        default: Date.now
-    }
-})
 
+    status: {
+      type: String,
+      enum: ["A", "I", "E"],
+      default: "A",
+    },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('SalaoColaborador', SalaoColaborador)
+// 🔒 evita duplicidade
+SalaoColaboradorSchema.index(
+  { salaoId: 1, colaboradorId: 1 },
+  { unique: true }
+);
+
+// performance
+SalaoColaboradorSchema.index({ salaoId: 1 });
+SalaoColaboradorSchema.index({ colaboradorId: 1 });
+
+module.exports = mongoose.model(
+  "SalaoColaborador",
+  SalaoColaboradorSchema
+);
