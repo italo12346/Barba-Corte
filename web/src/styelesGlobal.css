@@ -1,0 +1,89 @@
+:root {
+  --primary: #240046;
+  --dark: #10002B;
+  --dark2: #240046;
+  --danger: #d62828;
+  --success: #06d6a0;
+  --white: #f5f6f7;
+}
+#root{
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    padding:0;
+    margin:0;
+}
+header{
+    background-color: var(--primary);
+    height: 5rem;
+}
+header > div{
+    cursor: pointer;
+    transition: 0.5s;
+    padding: 10px 20px;
+}
+header > div:hover{
+    background-color: rgba(0,0,0,0.2);
+    transition: 0.5s;
+}
+header img{
+    width: 50px;
+    border-radius: 100%;
+}
+
+header span:not(.mdi) {
+  margin-bottom: -10px;
+}
+
+aside{
+        position: absolute;
+    background-color: var(--dark);
+
+}
+
+aside ul li a {
+    color: var(--white);
+    width: 100%;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin: 6px 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+aside ul li a.active {
+    background-color: var(--dark2);
+    opacity: 1;
+    border-radius: 8px;
+}
+
+/* Hover */
+aside ul li a:hover {
+    background-color: rgba(255,255,255,0.08);
+    opacity: 1;
+    transform: translateX(4px);
+}
+
+/* Ícone */
+aside ul li a .mdi {
+    font-size: 1.2rem;
+    transition: 0.3s;
+}
+
+/* Hover no ícone */
+aside ul li a:hover .mdi {
+    transform: scale(1.15);
+}
+
+.container{
+    position: relative;
+    left: 16.66%;
+
+}
+
+@media (max-width: 700px) {
+    aside{
+        display: none;
+    }
+}
