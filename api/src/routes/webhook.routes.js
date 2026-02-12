@@ -13,17 +13,25 @@ router.post("/mercadopago", async (req, res) => {
   try {
     const data = req.body;
 
-    // Mercado Pago envia vários tipos de eventos
+    // Aceita apenas eventos de pagamento
     if (data.type !== "payment") {
       return res.sendStatus(200);
     }
 
-    const paymentId = data.data.id;
+    const paymentId = data.data?.id;
+    if (!paymentId) {
+      return res.sendStatus(200);
+    }
 
-    // 🔥 consulta pagamento no MP
-    const pagamento = await mp.buscarPagamento(paymentId);
+    // 🔎 Consulta pagamento real no Mercado Pago
+    const pagamentoMP = await mp.buscarPagamento(paymentId);
 
-    // 🔍 encontra agendamento vinculado
+    if (!pagamentoMP) {
+      console.log("Pagamento não encontrado no MP:", paymentId);
+      return res.sendStatus(200);
+    }
+
+    // 🔍 Busca agendamento vinculado
     const agendamento = await Agendamento.findOne({
       "pagamento.mpPaymentId": paymentId,
     });
@@ -33,18 +41,35 @@ router.post("/mercadopago", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // 🎯 atualiza status
-    agendamento.pagamento.status = pagamento.status;
-
-    if (pagamento.status === "approved") {
-      agendamento.status = "confirmado";
+    // 🔒 Evita alterar agendamento já concluído
+    if (agendamento.status === "concluido") {
+      return res.sendStatus(200);
     }
 
-    if (
-      pagamento.status === "cancelled" ||
-      pagamento.status === "rejected"
-    ) {
-      agendamento.status = "cancelado";
+    // 🔄 Atualiza status do pagamento
+    agendamento.pagamento.status = pagamentoMP.status;
+
+    // 🎯 Atualiza status do agendamento
+    switch (pagamentoMP.status) {
+
+      case "approved":
+        if (agendamento.status === "aguardando_pagamento") {
+          agendamento.status = "confirmado";
+        }
+        break;
+
+      case "cancelled":
+      case "rejected":
+        agendamento.status = "cancelado";
+        break;
+
+      case "expired":
+        agendamento.status = "cancelado";
+        break;
+
+      default:
+        // mantém aguardando_pagamento
+        break;
     }
 
     await agendamento.save();

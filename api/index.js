@@ -13,6 +13,8 @@ const servicosRoutes = require("./src/routes/servicos.routes");
 const horarioRoutes = require("./src/routes/horario.routes");
 const colaboradorRoutes = require("./src/routes/colaborador.routes");
 const webhook = require("./src/routes/webhook.routes");
+const agendamentoRoutes = require("./src/routes/pagamento.routes");
+const clienteRoutes = require("./src/routes/cliente.routes");
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use("/servicos", servicosRoutes);
 app.use("/horario", horarioRoutes);
 app.use("/colaborador", colaboradorRoutes);
 app.use("/webhook", webhook);
+app.use("/agendamento", agendamentoRoutes);
+app.use("/cliente", clienteRoutes);
 
 // Server
 const PORT = process.env.PORT || 8000;
