@@ -1,7 +1,7 @@
 :root {
   --primary: #240046;
   --dark: #10002B;
-  --dark2: #240046;
+  --dark2: #5A189A;
   --danger: #d62828;
   --success: #06d6a0;
   --white: #f5f6f7;
@@ -23,7 +23,8 @@ header > div{
     padding: 10px 20px;
 }
 header > div:hover{
-    background-color: rgba(0,0,0,0.2);
+    background-color: rgba(255,255,255,0.08);
+    opacity: 1;
     transition: 0.5s;
 }
 header img{
@@ -36,7 +37,7 @@ header span:not(.mdi) {
 }
 
 aside{
-        position: absolute;
+    position: absolute;
     background-color: var(--dark);
 
 }
@@ -53,9 +54,13 @@ aside ul li a {
     transition: all 0.3s ease;
 }
 aside ul li a.active {
-    background-color: var(--dark2);
+    background-color: var(--primary);
     opacity: 1;
     border-radius: 8px;
+}
+
+aside ul li a.active .mdi {
+    color: var(--dark2);
 }
 
 /* Hover */
@@ -81,8 +86,98 @@ aside ul li a:hover .mdi {
     left: 16.66%;
 
 }
+.calendar-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
 
-@media (max-width: 700px) {
+
+/* ===== CONTAINER GERAL ===== */
+.rbc-calendar {
+  color: var(--primary);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid var(--primary);
+}
+
+/* ===== TOOLBAR ===== */
+
+
+.rbc-toolbar-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+ 
+}
+
+.rbc-toolbar button {
+  background: var(--primary);
+  border: none;
+  color: var(--white);
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: 0.3s;
+}
+
+.rbc-toolbar button:hover {
+  background: var(--dark2);
+  transform: translateY(-1px);
+}
+
+.rbc-toolbar button.rbc-active {
+  background: var(--success);
+  color: #000;
+}
+
+/* ===== CABEÇALHO DOS DIAS ===== */
+.rbc-header {
+  background: var(--dark2);
+  padding: 10px;
+  font-weight: 600;
+  border: none;
+  color: var(--white);
+}
+
+/* ===== GRADE ===== */
+.rbc-time-view,
+.rbc-month-view {
+  border: none;
+}
+
+.rbc-time-content {
+  border-top: 1px solid ;
+}
+
+
+
+
+/* ===== LATERAL DE HORÁRIOS ===== */
+.rbc-time-gutter {
+  display: flex !important;
+  justify-content: center !important;
+  color: var(--dark);
+}
+
+/* ===== DIA ATUAL ===== */
+.rbc-today {
+      background-color: var(--primary)!important;
+      opacity: 0.15  !important;
+}
+
+/* ===== EVENTOS ===== */
+.rbc-event {
+  background: var(--dark2) !important;
+  border: none !important;
+  padding: 0  !important;
+  left: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  height: 100% ;
+  margin-left: 5.2px !important;
+}
+
+
+@media (max-width: 850px) {
     aside{
         display: none;
     }
