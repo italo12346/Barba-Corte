@@ -13,7 +13,7 @@ const servicosRoutes = require("./src/routes/servicos.routes");
 const horarioRoutes = require("./src/routes/horario.routes");
 const colaboradorRoutes = require("./src/routes/colaborador.routes");
 const webhook = require("./src/routes/webhook.routes");
-const agendamentoRoutes = require("./src/routes/pagamento.routes");
+const agendamentoRoutes = require("./src/routes/agendamento.routes");
 const clienteRoutes = require("./src/routes/cliente.routes");
 
 const app = express();

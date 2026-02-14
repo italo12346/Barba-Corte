@@ -9,10 +9,25 @@ const moment = require("moment");
 
 /*
 ========================================
+DEBUG HELPER
+========================================
+*/
+const debug = (scope, message, data = null) => {
+  console.log(
+    `[DEBUG][${scope}] ${message}`,
+    data ? JSON.stringify(data, null, 2) : ""
+  );
+};
+
+/*
+========================================
 CRIAR / VINCULAR CLIENTE AO SALÃO
 ========================================
 */
 router.post("/", async (req, res) => {
+  const txId = new mongoose.Types.ObjectId().toString();
+  debug(txId, "Iniciando criação/vínculo", req.body);
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -27,7 +42,8 @@ router.post("/", async (req, res) => {
       throw new Error("ID do salão inválido");
     }
 
-    // 🔍 procura cliente existente
+    debug(txId, "Validando cliente existente");
+
     let existentClient = await Cliente.findOne({
       $or: [
         { email: cliente.email },
@@ -37,12 +53,9 @@ router.post("/", async (req, res) => {
 
     let clienteId;
 
-    /*
-    =====================
-    CRIAR CLIENTE
-    =====================
-    */
     if (!existentClient) {
+      debug(txId, "Cliente não existe — criando");
+
       const novoCliente = await new Cliente({
         ...cliente,
         mercadoPago: {
@@ -53,20 +66,20 @@ router.post("/", async (req, res) => {
       clienteId = novoCliente._id;
 
     } else {
+      debug(txId, "Cliente existente encontrado", existentClient._id);
       clienteId = existentClient._id;
     }
 
-    /*
-    =====================
-    VÍNCULO SALÃO ⇄ CLIENTE
-    =====================
-    */
+    debug(txId, "Verificando vínculo salão ⇄ cliente");
+
     let vinculo = await SalaoCliente.findOne({
       salaoId,
       clienteId,
     }).session(session);
 
     if (!vinculo) {
+      debug(txId, "Criando novo vínculo");
+
       await new SalaoCliente({
         salaoId,
         clienteId,
@@ -74,12 +87,14 @@ router.post("/", async (req, res) => {
       }).save({ session });
 
     } else if (vinculo.status === "I") {
+      debug(txId, "Reativando vínculo");
+
       vinculo.status = "A";
       await vinculo.save({ session });
     }
 
     await session.commitTransaction();
-    session.endSession();
+    debug(txId, "Transação concluída com sucesso");
 
     return res.json({
       error: false,
@@ -87,13 +102,18 @@ router.post("/", async (req, res) => {
     });
 
   } catch (err) {
+    debug(txId, "Erro na transação", err.message);
+
     await session.abortTransaction();
-    session.endSession();
 
     return res.status(400).json({
       error: true,
       message: err.message,
     });
+
+  } finally {
+    session.endSession();
+    debug(txId, "Sessão encerrada");
   }
 });
 
@@ -103,8 +123,14 @@ FILTRAR CLIENTES
 ========================================
 */
 router.post("/filter", async (req, res) => {
+  const scope = "FILTER";
+
   try {
+    debug(scope, "Filtro recebido", req.body.filters);
+
     const clientes = await Cliente.find(req.body.filters || {});
+
+    debug(scope, "Clientes encontrados", clientes.length);
 
     res.json({
       error: false,
@@ -112,6 +138,8 @@ router.post("/filter", async (req, res) => {
     });
 
   } catch (err) {
+    debug(scope, "Erro no filtro", err.message);
+
     res.status(400).json({
       error: true,
       message: err.message,
@@ -124,9 +152,12 @@ router.post("/filter", async (req, res) => {
 LISTAR CLIENTES DO SALÃO
 ========================================
 */
-router.get("/salao/:salaoId", async (req, res) => {
+router.get("/:salaoId", async (req, res) => {
+  const scope = "LIST";
+
   try {
     const { salaoId } = req.params;
+    debug(scope, "Listando clientes do salão", salaoId);
 
     if (!mongoose.Types.ObjectId.isValid(salaoId)) {
       throw new Error("ID do salão inválido");
@@ -138,6 +169,8 @@ router.get("/salao/:salaoId", async (req, res) => {
     })
       .populate("clienteId")
       .select("clienteId dataCadastro");
+
+    debug(scope, "Vínculos encontrados", clientes.length);
 
     const resultado = clientes
       .filter(c => c.clienteId)
@@ -153,6 +186,8 @@ router.get("/salao/:salaoId", async (req, res) => {
     });
 
   } catch (err) {
+    debug(scope, "Erro na listagem", err.message);
+
     res.status(400).json({
       error: true,
       message: err.message,
@@ -166,8 +201,11 @@ INATIVAR VÍNCULO
 ========================================
 */
 router.delete("/vinculo/:id", async (req, res) => {
+  const scope = "DELETE";
+
   try {
     const { id } = req.params;
+    debug(scope, "Inativando vínculo", id);
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       throw new Error("ID inválido");
@@ -182,11 +220,13 @@ router.delete("/vinculo/:id", async (req, res) => {
     vinculo.status = "I";
     await vinculo.save();
 
-    res.json({
-      error: false,
-    });
+    debug(scope, "Vínculo inativado");
+
+    res.json({ error: false });
 
   } catch (err) {
+    debug(scope, "Erro ao inativar", err.message);
+
     res.status(400).json({
       error: true,
       message: err.message,
