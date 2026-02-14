@@ -12,40 +12,45 @@ const Clientes = () => {
   const dispatch = useDispatch();
 
   // Redux state
-  const { data = [], loading = false } =
-    useSelector(state => state.cliente);
+  const { data = [], loading = false } = useSelector((state) => state.cliente);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [clienteSelecionado, setClienteSelecionado] =
-    useState(null);
+  const [clienteSelecionado, setClienteSelecionado] = useState(null);
 
+  const formatarTelefone = (telefone) => {
+    if (!telefone) return "-";
+    const numeros = telefone.replace(/\D/g, "");
+    if (numeros.length === 11) {
+      return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
+    }
+    if (numeros.length === 10) {
+      return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+    }
+    return telefone;
+  };
   // Fetch clientes
   useEffect(() => {
+    // ✅ Função para formatar telefone
     dispatch(actions.getClientes());
   }, [dispatch]);
 
   return (
     <div className="container p-4">
-
       <div className="container-cliente">
-
         {/* Header */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h2>Clientes</h2>
 
-          <button className="btn btn-lg">
-            Novo Cliente
-          </button>
+          <button className="btn btn-lg">Novo Cliente</button>
         </div>
 
         {/* Card container */}
         <div className="card shadow-sm border-0">
           <div className="card-body p-0">
-
             <Table
               height={800}
-              width={Math.max(window.innerWidth - 400, 800)}
+              width={Math.max(window.innerWidth - 365, 800)}
               data={Array.isArray(data) ? data : []}
               loading={loading}
               rowKey="_id"
@@ -53,7 +58,6 @@ const Clientes = () => {
               hover
               cellBordered
             >
-
               <Column flexGrow={2}>
                 <HeaderCell>Nome</HeaderCell>
                 <Cell dataKey="nome" />
@@ -66,7 +70,7 @@ const Clientes = () => {
 
               <Column flexGrow={1}>
                 <HeaderCell>Telefone</HeaderCell>
-                <Cell dataKey="telefone" />
+                <Cell>{(rowData) => formatarTelefone(rowData.telefone)}</Cell>
               </Column>
 
               <Column flexGrow={1}>
@@ -79,9 +83,8 @@ const Clientes = () => {
                 <HeaderCell>Ações</HeaderCell>
 
                 <Cell>
-                  {row => (
+                  {(row) => (
                     <div className="d-flex gap-2">
-
                       {/* VER */}
                       <Button
                         appearance="subtle"
@@ -95,32 +98,21 @@ const Clientes = () => {
                       </Button>
 
                       {/* EDITAR */}
-                      <Button
-                        appearance="subtle"
-                        size="sm"
-                      >
+                      <Button appearance="subtle" size="sm">
                         <span className="mdi mdi-pencil" />
                       </Button>
 
                       {/* DELETE */}
-                      <Button
-                        appearance="subtle"
-                        size="sm"
-                        color="red"
-                      >
+                      <Button appearance="subtle" size="sm" color="red">
                         <span className="mdi mdi-delete" />
                       </Button>
-
                     </div>
                   )}
                 </Cell>
               </Column>
-
             </Table>
-
           </div>
         </div>
-
       </div>
 
       {/* Modal reutilizável */}
@@ -129,7 +121,6 @@ const Clientes = () => {
         onClose={() => setModalOpen(false)}
         cliente={clienteSelecionado}
       />
-
     </div>
   );
 };

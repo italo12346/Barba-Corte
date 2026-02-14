@@ -1,30 +1,163 @@
-import { Modal, Button } from "rsuite";
+import { Modal } from "rsuite";
 
-const ClienteModal = ({ open, onClose, cliente }) => {
+const ClienteModal = ({
+  open,
+  onClose,
+  cliente,
+  agendamentos = [],
+  loading = false,
+}) => {
+  if (!cliente) return null;
+
+  // ✅ Função para formatar datas
+  const formatarData = (data) => {
+    if (!data) return "-";
+    return new Date(data).toLocaleDateString("pt-BR");
+  };
+
+  // ✅ Função para formatar telefone
+  const formatarTelefone = (telefone) => {
+    if (!telefone) return "-";
+
+    const numeros = telefone.replace(/\D/g, "");
+
+    if (numeros.length === 11) {
+      // Celular (99) 99999-9999
+      return numeros.replace(
+        /^(\d{2})(\d{5})(\d{4})$/,
+        "($1) $2-$3"
+      );
+    }
+
+    if (numeros.length === 10) {
+      // Fixo (99) 9999-9999
+      return numeros.replace(
+        /^(\d{2})(\d{4})(\d{4})$/,
+        "($1) $2-$3"
+      );
+    }
+
+    return telefone; // fallback
+  };
+
   return (
-    <Modal open={open} onClose={onClose} size="md">
+    <Modal open={open} onClose={onClose} size="lg">
       <Modal.Header>
-        <Modal.Title>Dados do Cliente</Modal.Title>
+        <Modal.Title>
+          <div className="d-flex align-items-center gap-3">
+            <div
+              className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
+              style={{ width: 50, height: 50, fontSize: 20 }}
+            >
+              {cliente.nome?.charAt(0)}
+            </div>
+
+            <div>
+              <h5 className="mb-0">{cliente.nome}</h5>
+              <small className="text-muted">{cliente.email}</small>
+            </div>
+          </div>
+        </Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
-        {cliente && (
-          <div className="d-flex flex-column gap-2">
+        {loading && (
+          <div className="text-center py-4">
+            <div className="spinner-border text-dark" />
+          </div>
+        )}
 
-            <div><strong>Nome:</strong> {cliente.nome}</div>
-            <div><strong>Email:</strong> {cliente.email}</div>
-            <div><strong>Telefone:</strong> {cliente.telefone}</div>
-            <div><strong>Cadastro:</strong> {cliente.dataCadastro}</div>
+        {!loading && (
+          <div className="container-fluid">
+            {/* =========================
+               DADOS DO CLIENTE
+            ========================== */}
+            <div className="card shadow-sm mb-4">
+              <div className="card-header bg-dark text-white">
+                Dados do Cliente
+              </div>
 
+              <div className="card-body row g-3">
+                <Info
+                  label="Telefone"
+                  value={formatarTelefone(cliente.telefone)}
+                />
+                <Info label="Sexo" value={cliente.sexo} />
+                <Info
+                  label="Nascimento"
+                  value={formatarData(cliente.dataNascimento)}
+                />
+                <Info label="Documento" value={cliente.documento?.numero} />
+                <Info label="Cidade" value={cliente.endereco?.cidade} />
+              </div>
+            </div>
+
+            {/* =========================
+               AGENDAMENTOS
+            ========================== */}
+            <div className="card shadow-sm">
+              <div className="card-header bg-dark text-white">
+                Histórico de Agendamentos
+              </div>
+
+              <div className="table-responsive">
+                <table className="table table-hover mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Serviço</th>
+                      <th>Colaborador</th>
+                      <th>Data</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {agendamentos.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="text-center py-3">
+                          Nenhum agendamento encontrado
+                        </td>
+                      </tr>
+                    )}
+
+                    {agendamentos.map((a) => (
+                      <tr key={a._id}>
+                        <td>{a.servico}</td>
+                        <td>{a.colaborador}</td>
+                        <td>{formatarData(a.data)}</td>
+                        <td>
+                          <span className="badge bg-success">
+                            {a.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
       </Modal.Body>
 
       <Modal.Footer>
-        <Button onClick={onClose}>Fechar</Button>
+        <button className="btn btn-dark" onClick={onClose}>
+          Fechar
+        </button>
       </Modal.Footer>
     </Modal>
   );
 };
 
 export default ClienteModal;
+
+/* =========================
+   COMPONENTE AUXILIAR
+========================= */
+
+const Info = ({ label, value }) => (
+  <div className="col-md-4">
+    <small className="text-muted">{label}</small>
+    <div className="fw-semibold">{value || "-"}</div>
+  </div>
+);
