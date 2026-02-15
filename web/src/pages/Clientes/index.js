@@ -12,9 +12,12 @@ const Clientes = () => {
   const dispatch = useDispatch();
 
   // Redux state
-  const { data = [], loading = false } = useSelector(
-    (state) => state.cliente
-  );
+  const {
+    data = [],
+    loading = false,
+    agendamentos = [],
+    loadingAgendamentos = false,
+  } = useSelector((state) => state.cliente);
 
   // Modal (Visualizar Cliente)
   const [modalOpen, setModalOpen] = useState(false);
@@ -43,7 +46,6 @@ const Clientes = () => {
   return (
     <div className="container p-4">
       <div className="container-cliente">
-
         {/* Header */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h2>Clientes</h2>
@@ -74,9 +76,7 @@ const Clientes = () => {
 
               <Column flexGrow={1}>
                 <HeaderCell>Telefone</HeaderCell>
-                <Cell>
-                  {(rowData) => formatarTelefone(rowData.telefone)}
-                </Cell>
+                <Cell>{(rowData) => formatarTelefone(rowData.telefone)}</Cell>
               </Column>
 
               <Column flexGrow={1}>
@@ -95,6 +95,7 @@ const Clientes = () => {
                         onClick={() => {
                           setClienteSelecionado(row);
                           setModalOpen(true);
+                          dispatch(actions.getAgendamentosCliente(row._id));
                         }}
                       >
                         <span className="mdi mdi-eye" />
@@ -113,6 +114,8 @@ const Clientes = () => {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         cliente={clienteSelecionado}
+        agendamentos={agendamentos}
+        loading={loadingAgendamentos}
       />
     </div>
   );

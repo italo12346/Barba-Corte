@@ -8,6 +8,8 @@ import {
   getClientesFailure,
   deleteClienteSuccess,
   deleteClienteFailure,
+   getAgendamentosClienteSuccess,
+  getAgendamentosClienteFailure,
 } from './actions';
 
 function* fetchClientes() {
@@ -20,6 +22,23 @@ function* fetchClientes() {
     yield put(getClientesSuccess(response.data.clientes));
   } catch (error) {
     yield put(getClientesFailure(error.message));
+  }
+}
+
+function* fetchAgendamentosCliente({ payload }) {
+  try {
+    const response = yield call(
+      api.get,
+      `/agendamento/cliente/${payload}`
+    );
+
+    yield put(
+      getAgendamentosClienteSuccess(response.data.agendamentos)
+    );
+  } catch (error) {
+    yield put(
+      getAgendamentosClienteFailure(error.message)
+    );
   }
 }
 
@@ -36,6 +55,11 @@ export default function* clientesSaga() {
   yield takeLatest(
     Types.GET_CLIENTES_REQUEST,
     fetchClientes
+  );
+
+  yield takeLatest(
+    Types.GET_AGENDAMENTOS_CLIENTE_REQUEST,
+    fetchAgendamentosCliente
   );
 
   yield takeLatest(

@@ -73,7 +73,7 @@ const Agendamento = () => {
             selectable
             min={new Date(1970, 1, 1, 8, 0, 0)}
             max={new Date(1970, 1, 1, 18, 0, 0)}
-            step={30}
+            step={60}
             timeslots={1}
             popup
             style={{ height: 600, width: "83%" }}
