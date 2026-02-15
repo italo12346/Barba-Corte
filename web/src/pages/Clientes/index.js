@@ -4,7 +4,7 @@ import { Table, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 
 import * as actions from "../../store/modules/cliente/actions";
-import ClienteModal from "../../components/modal/index";
+import ClienteModal from "../../components/modal";
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -12,40 +12,44 @@ const Clientes = () => {
   const dispatch = useDispatch();
 
   // Redux state
-  const { data = [], loading = false } = useSelector((state) => state.cliente);
+  const { data = [], loading = false } = useSelector(
+    (state) => state.cliente
+  );
 
-  // Modal state
+  // Modal (Visualizar Cliente)
   const [modalOpen, setModalOpen] = useState(false);
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
 
   const formatarTelefone = (telefone) => {
     if (!telefone) return "-";
     const numeros = telefone.replace(/\D/g, "");
+
     if (numeros.length === 11) {
       return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
     }
+
     if (numeros.length === 10) {
       return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
     }
+
     return telefone;
   };
-  // Fetch clientes
+
+  // Buscar clientes ao montar
   useEffect(() => {
-    // ✅ Função para formatar telefone
     dispatch(actions.getClientes());
   }, [dispatch]);
 
   return (
     <div className="container p-4">
       <div className="container-cliente">
+
         {/* Header */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h2>Clientes</h2>
-
-          <button className="btn btn-lg">Novo Cliente</button>
         </div>
 
-        {/* Card container */}
+        {/* Tabela */}
         <div className="card shadow-sm border-0">
           <div className="card-body p-0">
             <Table
@@ -70,7 +74,9 @@ const Clientes = () => {
 
               <Column flexGrow={1}>
                 <HeaderCell>Telefone</HeaderCell>
-                <Cell>{(rowData) => formatarTelefone(rowData.telefone)}</Cell>
+                <Cell>
+                  {(rowData) => formatarTelefone(rowData.telefone)}
+                </Cell>
               </Column>
 
               <Column flexGrow={1}>
@@ -78,14 +84,11 @@ const Clientes = () => {
                 <Cell dataKey="dataCadastro" />
               </Column>
 
-              {/* Actions */}
               <Column flexGrow={1}>
                 <HeaderCell>Ações</HeaderCell>
-
                 <Cell>
                   {(row) => (
                     <div className="d-flex gap-2">
-                      {/* VER */}
                       <Button
                         appearance="subtle"
                         size="sm"
@@ -96,16 +99,6 @@ const Clientes = () => {
                       >
                         <span className="mdi mdi-eye" />
                       </Button>
-
-                      {/* EDITAR */}
-                      <Button appearance="subtle" size="sm">
-                        <span className="mdi mdi-pencil" />
-                      </Button>
-
-                      {/* DELETE */}
-                      <Button appearance="subtle" size="sm" color="red">
-                        <span className="mdi mdi-delete" />
-                      </Button>
                     </div>
                   )}
                 </Cell>
@@ -115,7 +108,7 @@ const Clientes = () => {
         </div>
       </div>
 
-      {/* Modal reutilizável */}
+      {/* Modal Visualizar */}
       <ClienteModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}

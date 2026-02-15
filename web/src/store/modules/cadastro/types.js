@@ -1,0 +1,3 @@
+export const REGISTER_REQUEST = '@auth/REGISTER_REQUEST'
+export const REGISTER_SUCCESS = '@auth/REGISTER_SUCCESS'
+export const REGISTER_FAILURE = '@auth/REGISTER_FAILURE'

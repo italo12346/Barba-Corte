@@ -6,5 +6,6 @@ export default function* rootSaga() {
   yield all([
     agendamentoSaga,
     clienteSaga(),
+    
   ]);
 }
