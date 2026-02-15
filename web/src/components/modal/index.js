@@ -107,6 +107,7 @@ const ClienteModal = ({
                       <th>Serviço</th>
                       <th>Colaborador</th>
                       <th>Data</th>
+                      <th>Valor</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -125,6 +126,7 @@ const ClienteModal = ({
                         <td>{a.servico}</td>
                         <td>{a.colaborador}</td>
                         <td>{formatarData(a.data)}</td>
+                        <td>R$ {a.valor}</td>
                         <td>
                           <span className="badge bg-success">
                             {a.status}
