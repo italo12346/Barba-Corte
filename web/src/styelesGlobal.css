@@ -4,7 +4,7 @@
   --dark2: #5A189A;
   --danger: #d62828;
   --success: #06d6a0;
-  --white: #f5f6f7;
+  --white: #f5f6f7e0;
 }
 #root{
     height: 100%;
@@ -92,6 +92,20 @@ aside ul li a:hover .mdi {
   overflow-x: auto;
 }
 
+.container-cliente{
+  width: 83%;
+}
+.container-cliente .btn {
+  background-color: var(--dark2) !important;
+  color: var(--white);
+  transition: all 0.2s ease;
+}
+
+.container-cliente .btn:hover {
+  background-color: var(--dark3) ;
+  opacity: 0.7;
+  transform: translateY(-3px);
+}
 
 /* ===== CONTAINER GERAL ===== */
 .rbc-calendar {

@@ -23,16 +23,16 @@ const clienteSchema = new mongoose.Schema(
         },
         telefone: {
             type: String,
-            required: true,
+            required: false,
         },
         dataNascimento: {
             type: Date,
-            required: true,
+            required: false,
         },
         sexo: {
             type: String,
             enum: ['M', 'F', 'O'],
-            required: true,
+            required: false,
         },
         status: {
             type: String,
@@ -58,4 +58,6 @@ const clienteSchema = new mongoose.Schema(
 
 );
 
-module.exports = mongoose.model('Cliente', clienteSchema);
+module.exports =
+  mongoose.models.Cliente ||
+  mongoose.model("Cliente", clienteSchema);
