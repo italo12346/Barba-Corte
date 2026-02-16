@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 
 import PrivateLayout from "./layouts/PrivateLayout";
+import Colaboradores from "./pages/colaboradores";
 
 const AppRoutes = () => {
   return (
@@ -33,6 +34,14 @@ const AppRoutes = () => {
           element={
             <PrivateLayout>
               <Clientes />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/colaboradores"
+          element={
+            <PrivateLayout>
+              <Colaboradores />
             </PrivateLayout>
           }
         />

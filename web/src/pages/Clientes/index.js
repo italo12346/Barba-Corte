@@ -4,7 +4,7 @@ import { Table, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 
 import * as actions from "../../store/modules/cliente/actions";
-import ClienteModal from "../../components/modal";
+import ClienteModal from "../../components/clienteModal";
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -48,15 +48,15 @@ const Clientes = () => {
       <div className="container-cliente">
         {/* Header */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
-          <h2>Clientes</h2>
+          <h1>Clientes</h1>
         </div>
 
         {/* Tabela */}
-        <div className="card shadow-sm border-0">
+        <div className="card ">
           <div className="card-body p-0">
             <Table
-              height={800}
-              width={Math.max(window.innerWidth - 365, 800)}
+              height={565}
+              width={'100%'}
               data={Array.isArray(data) ? data : []}
               loading={loading}
               rowKey="_id"
@@ -88,7 +88,7 @@ const Clientes = () => {
                 <HeaderCell>Ações</HeaderCell>
                 <Cell>
                   {(row) => (
-                    <div className="d-flex gap-2">
+                    <div className="actions d-flex gap-2">
                       <Button
                         appearance="subtle"
                         size="sm"
