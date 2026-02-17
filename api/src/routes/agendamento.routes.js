@@ -394,5 +394,39 @@ router.post("/dias-disponiveis", async (req, res) => {
   }
 });
 
+//AGENDAMENTOS POR CLIENTE
+router.get("/cliente/:clienteId", async (req, res) => {
+  try {
+    const { clienteId } = req.params;
+
+    const agendamentos = await Agendamento.find({
+      clienteId
+    })
+      .populate({ path: "servicoId", select: "titulo" })
+      .populate({ path: "colaboradorId", select: "nome" })
+      .sort({ dataAgendamento: -1 });
+
+    const resultado = agendamentos.map(a => ({
+      servico: a.servicoId?.titulo,
+      colaborador: a.colaboradorId?.nome,
+      data: a.dataAgendamento,
+      status: a.status,
+      valor: a.valorServico
+    }));
+
+    return res.json({
+      error: false,
+      agendamentos: resultado
+    });
+
+  } catch (err) {
+    console.error("Erro ao buscar agendamentos do cliente:", err);
+
+    return res.status(500).json({
+      error: true,
+      message: "Erro ao buscar agendamentos"
+    });
+  }
+});
 
 module.exports = router;

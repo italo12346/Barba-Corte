@@ -1,0 +1,121 @@
+.cadastro-wrapper {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--dark), var(--primary));
+  padding: 20px;
+}
+
+.cadastro-card {
+  background: var(--white);
+  padding: 45px 40px;
+  width: 100%;
+  max-width: 450px;
+  border-radius: 16px;
+  box-shadow: 0 30px 60px rgba(16, 0, 43, 0.35);
+  text-align: center;
+}
+
+.cadastro-logo {
+  display: block;
+  margin: 0 auto 25px auto;
+  max-width: 160px;
+  border-radius: 8px;
+}
+
+.cadastro-card h2 {
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.cadastro-card p {
+  margin-bottom: 25px;
+  color: var(--dark2);
+}
+
+.input-group {
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--dark);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(90, 24, 154, 0.2);
+  font-size: 0.95rem;
+  transition: 0.2s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--dark2);
+  box-shadow: 0 0 0 3px rgba(90, 24, 154, 0.2);
+}
+
+.senha-wrapper {
+  position: relative;
+}
+
+.senha-wrapper input {
+  padding-right: 42px;
+}
+
+.toggle-senha {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: var(--dark2);
+  opacity: 0.6;
+}
+
+.toggle-senha:hover {
+  opacity: 1;
+}
+
+.error-message {
+  background: rgba(214, 40, 40, 0.1);
+  color: var(--danger);
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.85rem;
+  border-left: 4px solid var(--danger);
+}
+
+.cadastro-btn {
+  height: 45px;
+  border-radius: 8px !important;
+  background: var(--dark2) !important;
+  border: none !important;
+}
+
+.cadastro-btn:hover {
+  background: var(--primary) !important;
+}
+
+.voltar-login {
+  margin-top: 18px;
+  font-size: 0.85rem;
+}
+
+.voltar-login span {
+  color: var(--dark2);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.voltar-login span:hover {
+  text-decoration: underline;
+}

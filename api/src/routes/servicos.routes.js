@@ -18,6 +18,45 @@ router.post('/', async (req, res) => {
         })
     }
 })
+// GET /servico/:servicoId
+router.get('/:servicoId', async (req, res) => {
+  try {
+    const { servicoId } = req.params;
+
+    // busca o serviço pelo ID
+    const servico = await Servicos.findById(servicoId);
+
+    if (!servico) {
+      return res.status(404).json({
+        error: true,
+        message: 'Serviço não encontrado',
+      });
+    }
+
+    // busca arquivos relacionados
+    const arquivos = await Arquivos.find({
+      model: 'Servico',
+      referenciaId: servico._id,
+    });
+
+    res.json({
+      error: false,
+      servico: {
+        ...servico.toObject(),
+        arquivos,
+      },
+    });
+
+  } catch (err) {
+    console.error('Erro ao buscar serviço:', err);
+
+    res.status(500).json({
+      error: true,
+      message: 'Erro ao buscar serviço',
+    });
+  }
+});
+
 
 router.get('/:salaoId', async (req, res) => {
     try {

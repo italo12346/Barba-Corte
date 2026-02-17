@@ -63,3 +63,17 @@ export const deleteClienteFailure = (error) => ({
   type: Types.DELETE_CLIENTE_FAILURE,
   payload: error,
 });
+export const getAgendamentosCliente = (clienteId) => ({
+  type: Types.GET_AGENDAMENTOS_CLIENTE_REQUEST,
+  payload: clienteId,
+});
+
+export const getAgendamentosClienteSuccess = (agendamentos) => ({
+  type: Types.GET_AGENDAMENTOS_CLIENTE_SUCCESS,
+  payload: agendamentos,
+});
+
+export const getAgendamentosClienteFailure = (error) => ({
+  type: Types.GET_AGENDAMENTOS_CLIENTE_FAILURE,
+  payload: error,
+});

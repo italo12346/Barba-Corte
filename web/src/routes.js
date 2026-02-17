@@ -1,23 +1,52 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from "./components/header";
-import Sidebar from "./components/sideBar";
-import './styelesGlobal.css';
-import Clientes from './pages/Clientes';
-import Agendamentos from './pages/Agendamento';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "./styelesGlobal.css";
+
+import Clientes from "./pages/Clientes";
+import Agendamentos from "./pages/Agendamento";
+import Login from "./pages/Login";
+import Cadastro from "./pages/Cadastro";
+
+import PrivateLayout from "./layouts/PrivateLayout";
+import Colaboradores from "./pages/colaboradores";
 
 const AppRoutes = () => {
   return (
     <Router>
-      <Header />
-      <div className="container-fluid h-100">
-        <div className="row h-100">
-          <Routes>
-            <Route path="/" element={<Agendamentos />} />
-            <Route path="/clientes" element={<Clientes />} />
-          </Routes>
-          <Sidebar />
-        </div>
-      </div>
+      <Routes>
+
+        {/* ROTA PÚBLICA */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/cadastro" element={<Cadastro />} />
+
+
+        {/* ROTAS PRIVADAS */}
+        <Route
+          path="/"
+          element={
+            <PrivateLayout>
+              <Agendamentos />
+            </PrivateLayout>
+          }
+        />
+
+        <Route
+          path="/clientes"
+          element={
+            <PrivateLayout>
+              <Clientes />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/colaboradores"
+          element={
+            <PrivateLayout>
+              <Colaboradores />
+            </PrivateLayout>
+          }
+        />
+
+      </Routes>
     </Router>
   );
 };

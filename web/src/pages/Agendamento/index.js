@@ -1,19 +1,25 @@
 import moment from "moment";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useDispatch, useSelector } from "react-redux";
 import types from "../../store/modules/agendamento/types";
 import EventCard from "../../components/eventCard";
+import AgendamentoModal from "../../components/AgendamentoModal";
 
 const localizer = momentLocalizer(moment);
 
 const Agendamento = () => {
   const dispatch = useDispatch();
 
-  const agendamentos = useSelector((state) => state.agendamento.agendamentos);
+  const agendamentos = useSelector(
+    (state) => state.agendamento.agendamentos
+  );
 
-  // ✅ useEffect no lugar correto
+  const [modalOpen, setModalOpen] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+
+  // 🔹 Carrega semana inicial
   useEffect(() => {
     const start = moment().startOf("week").toISOString();
     const end = moment().endOf("week").toISOString();
@@ -24,20 +30,28 @@ const Agendamento = () => {
     });
   }, [dispatch]);
 
-  // ✅ useMemo no lugar correto
+  // 🔹 Mapeia eventos para o calendário
   const eventos = useMemo(() => {
     return (agendamentos || []).map((a) => ({
       title: a.servicoId?.titulo || "Agendamento",
-      cliente: a.clienteId?.nome || "Cliente",
-      colaborador: a.colaboradorId?.nome || "Colaborador",
-      status: a.status || "pendente",
 
       start: moment.utc(a.dataAgendamento).local().toDate(),
-      end: moment.utc(a.dataAgendamento).local().add(30, "minutes").toDate(),
+      end: moment
+        .utc(a.dataAgendamento)
+        .local()
+        .add(30, "minutes")
+        .toDate(),
+
+      resource: a, // 👈 GUARDA O OBJETO COMPLETO
     }));
   }, [agendamentos]);
 
-  // ✅ formatRange apenas como função normal
+  // 🔹 Clique no evento
+  const handleSelectEvent = (event) => {
+    setAgendamentoSelecionado(event.resource); // 👈 pega original
+    setModalOpen(true);
+  };
+
   const formatRange = (periodo) => {
     if (Array.isArray(periodo)) {
       return {
@@ -61,6 +75,7 @@ const Agendamento = () => {
           <Calendar
             localizer={localizer}
             events={eventos}
+            onSelectEvent={handleSelectEvent}  
             onRangeChange={(periodo) => {
               const { start, end } = formatRange(periodo);
 
@@ -73,7 +88,7 @@ const Agendamento = () => {
             selectable
             min={new Date(1970, 1, 1, 8, 0, 0)}
             max={new Date(1970, 1, 1, 18, 0, 0)}
-            step={30}
+            step={60}
             timeslots={1}
             popup
             style={{ height: 600, width: "83%" }}
@@ -84,10 +99,12 @@ const Agendamento = () => {
         </div>
       </div>
 
-      <p>
-        Bem-vindo à página de agendamentos! Aqui você pode visualizar, criar e
-        gerenciar seus agendamentos.
-      </p>
+      {/* 🔥 MODAL */}
+      <AgendamentoModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        agendamento={agendamentoSelecionado}
+      />
     </div>
   );
 };
