@@ -41,7 +41,7 @@ export default function colaborador(state = INITIAL_STATE, action) {
     // =============================
     // SERVIÇOS
     // =============================
-    case types.SERVICOS_SUCCESS:
+    case types.LIST_SERVICOS_SUCCESS:
       return {
         ...state,
         servicos: action.payload,
@@ -83,29 +83,28 @@ export default function colaborador(state = INITIAL_STATE, action) {
         form: { ...state.form, loading: false },
         error: action.error,
       };
-      case types.LOAD_SERVICOS_COLABORADOR_REQUEST:
-  return {
-    ...state,
-    loadingServicosColaborador: true,
-  };
+    case types.LOAD_SERVICOS_COLABORADOR_REQUEST:
+      return {
+        ...state,
+        loadingServicosColaborador: true,
+      };
 
-case types.LOAD_SERVICOS_COLABORADOR_SUCCESS:
-  return {
-    ...state,
-    loadingServicosColaborador: false,
-    servicosColaborador: {
-      ...state.servicosColaborador,
-      ...action.payload, // 🔥 salva o mapa
-    },
-  };
+    case types.LOAD_SERVICOS_COLABORADOR_SUCCESS:
+      return {
+        ...state,
+        loadingServicosColaborador: false,
+        servicosColaborador: {
+          ...state.servicosColaborador,
+          ...action.payload, // 🔥 salva o mapa
+        },
+      };
 
-case types.LOAD_SERVICOS_COLABORADOR_FAILURE:
-  return {
-    ...state,
-    loadingServicosColaborador: false,
-    error: action.error,
-  };
-
+    case types.LOAD_SERVICOS_COLABORADOR_FAILURE:
+      return {
+        ...state,
+        loadingServicosColaborador: false,
+        error: action.error,
+      };
 
     default:
       return state;

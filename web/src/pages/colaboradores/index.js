@@ -201,13 +201,14 @@ const salvar = () => {
         </div>
 
         {/* MODAL CRIAR / EDITAR */}
-        <ColaboradorModal
-          open={openForm}
-          onClose={() => setOpenForm(false)}
-          form={form}
-          setForm={setForm}
-          salvar={salvar}
-        />
+<ColaboradorModal
+  open={openForm}
+  onClose={() => setOpenForm(false)}
+  form={form}
+  setForm={setForm}
+  salvar={salvar}
+  salaoId={consts.salaoId}
+/>
 
         {/* MODAL VISUALIZAR 👁️ */}
         <ColaboradorViewModal
