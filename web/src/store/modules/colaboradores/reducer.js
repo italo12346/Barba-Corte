@@ -3,6 +3,8 @@ import types from "./types";
 const INITIAL_STATE = {
   lista: [],
   servicos: [],
+  servicosColaborador: {},
+  loadingServicosColaborador: false,
   form: {
     nome: "",
     email: "",
@@ -81,6 +83,29 @@ export default function colaborador(state = INITIAL_STATE, action) {
         form: { ...state.form, loading: false },
         error: action.error,
       };
+      case types.LOAD_SERVICOS_COLABORADOR_REQUEST:
+  return {
+    ...state,
+    loadingServicosColaborador: true,
+  };
+
+case types.LOAD_SERVICOS_COLABORADOR_SUCCESS:
+  return {
+    ...state,
+    loadingServicosColaborador: false,
+    servicosColaborador: {
+      ...state.servicosColaborador,
+      ...action.payload, // 🔥 salva o mapa
+    },
+  };
+
+case types.LOAD_SERVICOS_COLABORADOR_FAILURE:
+  return {
+    ...state,
+    loadingServicosColaborador: false,
+    error: action.error,
+  };
+
 
     default:
       return state;

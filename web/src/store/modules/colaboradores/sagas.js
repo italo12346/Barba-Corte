@@ -69,11 +69,25 @@ function* createColaborador({ payload }) {
 ===================================================== */
 function* updateColaborador({ payload }) {
   try {
-    yield call(api.put, `/colaborador/${payload.id}`, payload);
+    if (!payload || !payload.colaborador) {
+      console.error("UPDATE BLOQUEADO: payload.colaborador indefinido", payload);
+      return; // bloqueia update
+    }
 
-    yield put({
-      type: types.UPDATE_COLABORADOR_SUCCESS,
+    const { _id, ...data } = payload.colaborador;
+
+    if (!_id) {
+      console.error("UPDATE BLOQUEADO: colaborador sem _id", payload);
+      return;
+    }
+
+    // PUT no backend
+    yield call(api.put, `/colaborador/${_id}`, {
+      ...data,
+      salaoId: payload.salaoId,
     });
+
+    yield put({ type: types.UPDATE_COLABORADOR_SUCCESS });
 
     if (payload?.salaoId) {
       yield put({
@@ -83,13 +97,13 @@ function* updateColaborador({ payload }) {
     }
   } catch (err) {
     console.error("Erro ao atualizar colaborador:", err);
-
     yield put({
       type: types.UPDATE_COLABORADOR_FAILURE,
-      error: err,
+      error: err.message || err,
     });
   }
 }
+
 
 /* =====================================================
    REMOVER COLABORADOR
@@ -142,6 +156,7 @@ function* listServicos({ payload: salaoId }) {
     });
   }
 }
+
 function* loadServicosColaborador({ payload }) {
   try {
     // payload = array de IDs de serviços

@@ -211,32 +211,38 @@ ATUALIZAR
 */
 router.put("/:colaboradorId", async (req, res) => {
   try {
-    const { vinculo, vinculoId, especialidades } = req.body;
+    const { vinculo, vinculoId, especialidades, ...colaboradorData } = req.body;
     const { colaboradorId } = req.params;
 
-    await Colaborador.findByIdAndUpdate(colaboradorId, req.body);
+    // Atualiza apenas os campos do colaborador
+    await Colaborador.findByIdAndUpdate(colaboradorId, colaboradorData, { new: true });
 
-    if (vinculo) {
+    // Atualiza vínculo somente se existir
+    if (vinculo && vinculoId) {
       await SalaoColaborador.findByIdAndUpdate(vinculoId, {
         status: vinculo,
       });
     }
 
-    if (especialidades) {
+    // Atualiza especialidades
+    if (Array.isArray(especialidades)) {
       await ColaboradorServico.deleteMany({ colaboradorId });
 
-      await ColaboradorServico.insertMany(
-        especialidades.map((servicoId) => ({
-          servicoId,
-          colaboradorId,
-        }))
-      );
+      if (especialidades.length > 0) {
+        await ColaboradorServico.insertMany(
+          especialidades.map((servicoId) => ({
+            servicoId,
+            colaboradorId,
+          }))
+        );
+      }
     }
 
     res.json({ error: false });
 
   } catch (err) {
-    res.json({ error: true, message: err.message });
+    console.error("Erro no PUT /colaborador/:id", err);
+    res.status(500).json({ error: true, message: err.message });
   }
 });
 

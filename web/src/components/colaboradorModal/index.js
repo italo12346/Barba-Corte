@@ -16,7 +16,6 @@ export default function ColaboradorModal({
   setForm,
   salvar,
 }) {
-
   // ===============================
   // Inicializa estrutura do form
   // ===============================
@@ -24,7 +23,7 @@ export default function ColaboradorModal({
     if (!open) return;
 
     setForm((prev) => ({
-      id: prev?.id,
+      _id: prev?._id, // ✅ mantém o ID correto
       nome: prev?.nome || "",
       email: prev?.email || "",
       telefone: prev?.telefone || "",
@@ -73,7 +72,6 @@ export default function ColaboradorModal({
 
       <Modal.Body>
         <Form fluid layout="vertical">
-
           {/* Nome */}
           <Form.Group>
             <Form.ControlLabel>Nome</Form.ControlLabel>
@@ -113,14 +111,11 @@ export default function ColaboradorModal({
               format="dd/MM/yyyy"
               oneTap
               value={
-                form.dataNascimento &&
-                !isNaN(new Date(form.dataNascimento))
+                form.dataNascimento && !isNaN(new Date(form.dataNascimento))
                   ? new Date(form.dataNascimento)
                   : null
               }
-              onChange={(value) =>
-                handleChange(value, "dataNascimento")
-              }
+              onChange={(value) => handleChange(value, "dataNascimento")}
             />
           </Form.Group>
 
@@ -148,13 +143,10 @@ export default function ColaboradorModal({
               style={{ width: "100%" }}
               data={especialidadesData}
               value={form.especialidades || []}
-              onChange={(value) =>
-                handleChange(value, "especialidades")
-              }
+              onChange={(value) => handleChange(value, "especialidades")}
               placeholder="Selecione as especialidades"
             />
           </Form.Group>
-
         </Form>
       </Modal.Body>
 

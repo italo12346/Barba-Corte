@@ -45,32 +45,35 @@ export default function Colaboradores() {
     setOpenForm(true);
   };
 
-  const editar = (row) => {
-    setForm(row);
-    setOpenForm(true);
-  };
+const editar = (row) => {
+  setForm({
+    ...row,
+    vinculoId: row.vinculoId || row._id, // vinculoId do SalaoColaborador, ou _id se for mesmo
+    vinculo: row.status,                 // para atualizar status no vínculo
+  });
+  setOpenForm(true);
+};
 
-  const salvar = () => {
-  if (form.id) {
+const salvar = () => {
+  console.log("FORM NO SALVAR:", form);
 
-    dispatch(
-      updateColaborador({
-        salaoId: consts.salaoId,
-        colaborador: { ...form },
-      })
-    );
+  if (form._id) {
+    console.log("DISPARANDO UPDATE com _id:", form._id);
+    dispatch(updateColaborador({
+      salaoId: consts.salaoId,
+      colaborador: { ...form }, // form deve ter _id
+    }));
   } else {
-    // CREATE (aqui está a correção)
-    dispatch(
-      createColaborador({
-        salaoId: consts.salaoId,
-        colaborador: { ...form },
-      })
-    );
+    console.log("DISPARANDO CREATE");
+    dispatch(createColaborador({
+      salaoId: consts.salaoId,
+      colaborador: { ...form },
+    }));
   }
 
   setOpenForm(false);
 };
+
 
   const desvincular = (id) => {
     if (!window.confirm("Desvincular colaborador?")) return;
