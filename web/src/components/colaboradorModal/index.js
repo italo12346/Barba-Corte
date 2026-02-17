@@ -1,200 +1,168 @@
+import {
+  Modal,
+  Button,
+  Form,
+  DatePicker,
+  SelectPicker,
+  CheckPicker,
+} from "rsuite";
+
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Modal, Button, Form, SelectPicker, IconButton } from "rsuite";
-import PlusIcon from "@rsuite/icons/Plus";
 
-import types from "../../store/modules/colaboradores/types";
-import consts from "../../consts/consts";
+export default function ColaboradorModal({
+  open,
+  onClose,
+  form,
+  setForm,
+  salvar,
+}) {
 
-export default function ColaboradorModal({ open, onClose, salvar }) {
-  const dispatch = useDispatch();
-
-  const { form, servicos, loadingServicos } = useSelector(
-    (state) => state.colaborador,
-  );
-
-  /* ==========================================
-     BUSCAR SERVIÇOS DO SALÃO
-  ========================================== */
+  // ===============================
+  // Inicializa estrutura do form
+  // ===============================
   useEffect(() => {
-    if (open) {
-      dispatch({
-        type: types.LIST_SERVICOS_REQUEST,
-        payload: consts.salaoId,
-      });
-    }
-  }, [open, dispatch]);
+    if (!open) return;
 
-  /* ==========================================
-     UPDATE FORM
-  ========================================== */
-  const updateField = (field, value) => {
-    dispatch({
-      type: types.UPDATE_FORM,
-      payload: { [field]: value },
+    setForm((prev) => ({
+      id: prev?.id,
+      nome: prev?.nome || "",
+      email: prev?.email || "",
+      telefone: prev?.telefone || "",
+      status: prev?.status || "A",
+      dataNascimento: prev?.dataNascimento || null,
+      sexo: prev?.sexo || "",
+      especialidades: prev?.especialidades || [],
+    }));
+  }, [open]);
+
+  // ===============================
+  // Change handler genérico
+  // ===============================
+  const handleChange = (value, name) => {
+    setForm({
+      ...form,
+      [name]: value,
     });
   };
 
-  const formatarTelefone = (telefone) => {
-    if (!telefone) return "";
+  // ===============================
+  // Mock especialidades
+  // (depois você conecta com backend)
+  // ===============================
+  const especialidadesData = [
+    { label: "Corte", value: "corte" },
+    { label: "Barba", value: "barba" },
+    { label: "Sobrancelha", value: "sobrancelha" },
+  ];
 
-    // remove tudo que não for número
-    let numeros = telefone.replace(/\D/g, "");
-
-    // 👉 limite de dígitos
-    numeros = numeros.slice(0, 11);
-
-    // celular — 11 dígitos
-    if (numeros.length > 10) {
-      return numeros.replace(
-        /^(\d{2})(\d{5})(\d{0,4})$/,
-        (_, ddd, parte1, parte2) =>
-          `(${ddd}) ${parte1}${parte2 ? "-" + parte2 : ""}`,
-      );
-    }
-
-    // fixo — até 10 dígitos
-    if (numeros.length > 2) {
-      return numeros.replace(
-        /^(\d{2})(\d{0,4})(\d{0,4})$/,
-        (_, ddd, parte1, parte2) =>
-          `(${ddd}) ${parte1}${parte2 ? "-" + parte2 : ""}`,
-      );
-    }
-
-    // só DDD
-    if (numeros.length > 0) {
-      return `(${numeros}`;
-    }
-
-    return "";
+  // ===============================
+  // Close com reset
+  // ===============================
+  const handleClose = () => {
+    setForm({});
+    onClose();
   };
 
-  /* ==========================================
-     PROTEÇÃO DO ARRAY SERVIÇOS
-  ========================================== */
-  const listaServicos = Array.isArray(servicos) ? servicos : [];
-
-  const servicosOptions = listaServicos.map((s) => ({
-    label: s.titulo,
-    value: s._id,
-  }));
-
   return (
-    <Modal open={open} onClose={onClose}>
-      <Modal.Header className="modalHeaderColaborador" closeButton={false}>
+    <Modal size="md" open={open} onClose={handleClose}>
+      <Modal.Header>
         <Modal.Title>
-          {form?._id ? "Editar Colaborador" : "Novo Colaborador"}
+          {form.id ? "Editar colaborador" : "Novo colaborador"}
         </Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
-        <Form fluid>
-          {/* NOME */}
+        <Form fluid layout="vertical">
+
+          {/* Nome */}
           <Form.Group>
             <Form.ControlLabel>Nome</Form.ControlLabel>
             <Form.Control
+              name="nome"
               value={form.nome || ""}
-              onChange={(value) => updateField("nome", value)}
+              onChange={(value) => handleChange(value, "nome")}
             />
           </Form.Group>
 
-          {/* EMAIL */}
+          {/* Email */}
           <Form.Group>
             <Form.ControlLabel>Email</Form.ControlLabel>
             <Form.Control
+              name="email"
               type="email"
               value={form.email || ""}
-              onChange={(value) => updateField("email", value)}
+              onChange={(value) => handleChange(value, "email")}
             />
           </Form.Group>
 
-          {/* SENHA */}
-          <Form.Group>
-            <Form.ControlLabel>Senha</Form.ControlLabel>
-            <Form.Control
-              type="password"
-              value={form.senha || ""}
-              onChange={(value) => updateField("senha", value)}
-            />
-          </Form.Group>
-
-          {/* TELEFONE */}
+          {/* Telefone */}
           <Form.Group>
             <Form.ControlLabel>Telefone</Form.ControlLabel>
             <Form.Control
+              name="telefone"
               value={form.telefone || ""}
+              onChange={(value) => handleChange(value, "telefone")}
+            />
+          </Form.Group>
+
+          {/* Data de Nascimento */}
+          <Form.Group>
+            <Form.ControlLabel>Data de Nascimento</Form.ControlLabel>
+            <DatePicker
+              style={{ width: "100%" }}
+              format="dd/MM/yyyy"
+              oneTap
+              value={
+                form.dataNascimento &&
+                !isNaN(new Date(form.dataNascimento))
+                  ? new Date(form.dataNascimento)
+                  : null
+              }
               onChange={(value) =>
-                updateField("telefone", formatarTelefone(value))
+                handleChange(value, "dataNascimento")
               }
             />
           </Form.Group>
 
-          {/* DATA NASCIMENTO */}
-          <Form.Group>
-            <Form.ControlLabel>Data de Nascimento</Form.ControlLabel>
-            <Form.Control
-              type="date"
-              value={form.dataNascimento || ""}
-              onChange={(value) => updateField("dataNascimento", value)}
-            />
-          </Form.Group>
-
-          {/* SEXO */}
+          {/* Sexo */}
           <Form.Group>
             <Form.ControlLabel>Sexo</Form.ControlLabel>
             <SelectPicker
+              style={{ width: "100%" }}
               data={[
                 { label: "Masculino", value: "M" },
                 { label: "Feminino", value: "F" },
+                { label: "Outro", value: "O" },
               ]}
               value={form.sexo || null}
-              onChange={(value) => updateField("sexo", value)}
-              block
+              onChange={(value) => handleChange(value, "sexo")}
+              placeholder="Selecione"
+              cleanable
             />
           </Form.Group>
 
-          {/* ESPECIALIDADES */}
+          {/* Especialidades */}
           <Form.Group>
             <Form.ControlLabel>Especialidades</Form.ControlLabel>
-
-            <div className="d-flex align-items-center gap-2">
-              <SelectPicker
-                data={servicosOptions}
-                value={form.especialidades || []}
-                onChange={(value) => updateField("especialidades", value)}
-                placeholder="Selecione especialidades"
-                loading={loadingServicos}
-                block
-                multiple
-              />
-
-              <IconButton
-                size="sm"
-                appearance="ghost"
-                icon={<PlusIcon />}
-                onClick={() => console.log("Abrir modal criar serviço")}
-              />
-            </div>
+            <CheckPicker
+              style={{ width: "100%" }}
+              data={especialidadesData}
+              value={form.especialidades || []}
+              onChange={(value) =>
+                handleChange(value, "especialidades")
+              }
+              placeholder="Selecione as especialidades"
+            />
           </Form.Group>
+
         </Form>
       </Modal.Body>
 
       <Modal.Footer>
-        <Button
-          className="btn"
-          loading={form.loading}
-          onClick={() =>
-            salvar({
-              ...form,
-              salaoId: consts.salaoId,
-            })
-          }
-        >
+        <Button appearance="primary" onClick={salvar}>
           Salvar
         </Button>
-
-        <Button appearance="subtle" onClick={onClose}>
+        <Button appearance="subtle" onClick={handleClose}>
           Cancelar
         </Button>
       </Modal.Footer>

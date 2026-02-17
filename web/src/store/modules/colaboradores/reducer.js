@@ -3,69 +3,83 @@ import types from "./types";
 const INITIAL_STATE = {
   lista: [],
   servicos: [],
-
-  loadingLista: false,
-  loadingServicos: false,
-
   form: {
+    nome: "",
+    email: "",
+    senha: "",
+    telefone: "",
+    servicos: [],
     loading: false,
   },
+  error: null,
 };
 
-export default function reducer(state = INITIAL_STATE, action) {
+export default function colaborador(state = INITIAL_STATE, action) {
+  console.log("ACTION:", action.type);
+
   switch (action.type) {
-
-    /* ==========================================
-       FORM
-    ========================================== */
-    case types.UPDATE_FORM:
-      return {
-        ...state,
-        form: { ...state.form, ...action.payload },
-      };
-
-    /* ==========================================
-       LISTAR COLABORADORES
-    ========================================== */
+    // =============================
+    // LISTAR COLABORADORES
+    // =============================
     case types.LIST_COLABORADORES_REQUEST:
       return {
         ...state,
-        loadingLista: true,
+        form: { ...state.form, loading: true },
       };
 
     case types.LIST_COLABORADORES_SUCCESS:
+      console.log("✅ Lista carregada:", action.payload);
+
       return {
         ...state,
         lista: action.payload,
-        loadingLista: false,
+        form: { ...state.form, loading: false },
       };
 
-    case types.LIST_COLABORADORES_FAILURE:
-      return {
-        ...state,
-        loadingLista: false,
-      };
-
-    /* ==========================================
-       LISTAR SERVIÇOS DO SALÃO
-    ========================================== */
-    case types.LIST_SERVICOS_REQUEST:
-      return {
-        ...state,
-        loadingServicos: true,
-      };
-
-    case types.LIST_SERVICOS_SUCCESS:
+    // =============================
+    // SERVIÇOS
+    // =============================
+    case types.SERVICOS_SUCCESS:
       return {
         ...state,
         servicos: action.payload,
-        loadingServicos: false,
       };
 
-    case types.LIST_SERVICOS_FAILURE:
+    // =============================
+    // UPDATE FORM
+    // =============================
+    case types.UPDATE_FORM:
+      console.log("📝 Atualizando form:", action.payload);
+
       return {
         ...state,
-        loadingServicos: false,
+        form: {
+          ...state.form,
+          ...action.payload,
+        },
+      };
+
+    // =============================
+    // CREATE
+    // =============================
+    case types.CREATE_COLABORADOR_REQUEST:
+      return {
+        ...state,
+        form: { ...state.form, loading: true },
+        error: null,
+      };
+
+    case types.CREATE_COLABORADOR_SUCCESS:
+      return {
+        ...state,
+        form: INITIAL_STATE.form,
+      };
+
+    case types.CREATE_COLABORADOR_FAILURE:
+      return {
+        ...state,
+        form: { ...state.form, loading: false },
+        error: action.error,
       };
 
     default:

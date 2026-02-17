@@ -21,7 +21,7 @@ const ColaboradorSchema = new mongoose.Schema(
 
     senha: {
       type: String,
-      required: true,
+      required: false,
     },
 
     telefone: {
@@ -37,7 +37,7 @@ const ColaboradorSchema = new mongoose.Schema(
     sexo: {
       type: String,
       enum: ["M", "F"],
-      required: true,
+      required: false,
     },
 
     status: {

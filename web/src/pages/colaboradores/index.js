@@ -51,13 +51,26 @@ export default function Colaboradores() {
   };
 
   const salvar = () => {
-    if (form._id) {
-      dispatch(updateColaborador({ ...form, salaoId: consts.salaoId }));
-    } else {
-      dispatch(createColaborador({ ...form, salaoId: consts.salaoId }));
-    }
-    setOpenForm(false);
-  };
+  if (form.id) {
+
+    dispatch(
+      updateColaborador({
+        salaoId: consts.salaoId,
+        colaborador: { ...form },
+      })
+    );
+  } else {
+    // CREATE (aqui está a correção)
+    dispatch(
+      createColaborador({
+        salaoId: consts.salaoId,
+        colaborador: { ...form },
+      })
+    );
+  }
+
+  setOpenForm(false);
+};
 
   const desvincular = (id) => {
     if (!window.confirm("Desvincular colaborador?")) return;
@@ -116,7 +129,7 @@ export default function Colaboradores() {
               width={'100%'}
               data={lista}
               loading={loading}
-              rowKey="_id"
+              rowKey="id"
               bordered
               hover
               cellBordered

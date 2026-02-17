@@ -10,6 +10,7 @@ function* listColaboradores({ payload: salaoId }) {
     const response = yield call(api.get, `/colaborador/salao/${salaoId}`);
 
     const { data } = response;
+console.log({data});
 
     // Se for array, mostrar item por item
     if (Array.isArray(data)) {
@@ -40,6 +41,8 @@ function* listColaboradores({ payload: salaoId }) {
 ===================================================== */
 function* createColaborador({ payload }) {
   try {
+    console.log("🚀 Criando colaborador:", payload);
+
     yield call(api.post, "/colaborador", payload);
 
     yield put({
@@ -52,9 +55,11 @@ function* createColaborador({ payload }) {
     });
 
   } catch (err) {
+    console.error("❌ Erro ao criar:", err.response?.data || err);
+
     yield put({
       type: types.CREATE_COLABORADOR_FAILURE,
-      error: err,
+      error: err.response?.data?.message || "Erro ao criar",
     });
   }
 }
@@ -64,7 +69,7 @@ function* createColaborador({ payload }) {
 ===================================================== */
 function* updateColaborador({ payload }) {
   try {
-    yield call(api.put, `/colaborador/${payload._id}`, payload);
+    yield call(api.put, `/colaborador/${payload.id}`, payload);
 
     yield put({
       type: types.UPDATE_COLABORADOR_SUCCESS,
@@ -120,17 +125,41 @@ function* unlikeColaborador({ payload }) {
 ===================================================== */
 function* listServicos({ payload: salaoId }) {
   try {
-    const { data } = yield call(api.get, `/salao/servico/${salaoId}`);
+    const { data } = yield call(
+      api.get,
+      `/salao/servico/${salaoId}`
+    );
 
     yield put({
       type: types.LIST_SERVICOS_SUCCESS,
-      payload: data,
+      payload: data.servicos, // ajuste se necessário
     });
-  } catch (err) {
-    console.error("Erro ao listar serviços:", err);
 
+  } catch (err) {
     yield put({
       type: types.LIST_SERVICOS_FAILURE,
+      error: err,
+    });
+  }
+}
+function* loadServicosColaborador({ payload }) {
+  try {
+    // payload = array de IDs de serviços
+    const servicosData = {};
+
+    for (const id of payload) {
+      const response = yield call(api.get, `/servicos/${id}`);
+      servicosData[id] = response.data.servico; // pegando objeto completo do serviço
+    }
+
+    yield put({
+      type: types.LOAD_SERVICOS_COLABORADOR_SUCCESS,
+      payload: servicosData,
+    });
+  } catch (err) {
+    console.error("Erro ao carregar serviços do colaborador:", err);
+    yield put({
+      type: types.LOAD_SERVICOS_COLABORADOR_FAILURE,
       error: err,
     });
   }
@@ -150,5 +179,6 @@ export default function* colaboradorSaga() {
     takeLatest(types.UNLIKE_COLABORADOR_REQUEST, unlikeColaborador),
 
     takeLatest(types.LIST_SERVICOS_REQUEST, listServicos),
+    takeLatest(types.LOAD_SERVICOS_COLABORADOR_REQUEST, loadServicosColaborador),
   ]);
 }

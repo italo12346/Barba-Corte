@@ -37,3 +37,7 @@ export const updateForm = (data) => ({
 });
 
 
+export const loadServicosColaborador = (especialidadesIds) => ({
+  type: types.LOAD_SERVICOS_COLABORADOR_REQUEST,
+  payload: especialidadesIds,
+});
