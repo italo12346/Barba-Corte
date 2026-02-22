@@ -1,4 +1,5 @@
 import { Modal } from "rsuite";
+import { formatarTelefone,formatarData} from "../../util/functionAux";
 
 const ClienteModal = ({
   open,
@@ -9,43 +10,7 @@ const ClienteModal = ({
 }) => {
   if (!cliente) return null;
 
-  // =========================
-  // FORMATAR DATA
-  // =========================
-  const formatarData = (data) => {
-    if (!data) return "-";
 
-    return new Date(data).toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  // =========================
-  // FORMATAR TELEFONE
-  // =========================
-  const formatarTelefone = (telefone) => {
-    if (!telefone) return "-";
-
-    const numeros = telefone.replace(/\D/g, "");
-
-    if (numeros.length === 11) {
-      return numeros.replace(
-        /^(\d{2})(\d{5})(\d{4})$/,
-        "($1) $2-$3"
-      );
-    }
-
-    if (numeros.length === 10) {
-      return numeros.replace(
-        /^(\d{2})(\d{4})(\d{4})$/,
-        "($1) $2-$3"
-      );
-    }
-
-    return telefone;
-  };
 
   // =========================
   // BADGE STATUS DINÂMICO

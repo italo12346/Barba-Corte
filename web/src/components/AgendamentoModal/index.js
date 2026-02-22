@@ -38,7 +38,7 @@ const AgendamentoModal = ({ open, onClose, agendamento }) => {
       className="agendamento-modal"
     >
       {/* HEADER */}
-      <Modal.Header>
+      <Modal.Header className="modalHeader">
         <Modal.Title className="color-w">
           Detalhes do Agendamento
         </Modal.Title>

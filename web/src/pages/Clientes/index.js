@@ -52,10 +52,9 @@ const Clientes = () => {
         </div>
 
         {/* Tabela */}
-        <div className="card ">
+        <div className="card-table ">
           <div className="card-body p-0">
             <Table
-              height={565}
               width={'100%'}
               data={Array.isArray(data) ? data : []}
               loading={loading}

@@ -8,6 +8,10 @@ const Colaborador = require("../models/colaborador");
 const SalaoColaborador = require("../models/relationship/salaoColaborador");
 const ColaboradorServico = require("../models/relationship/colaboradorServico");
 
+const Busboy = require("busboy");
+const Arquivos = require("../models/arquivo");
+const awsService = require("../services/aws");
+
 
 /*
 ========================================
@@ -261,6 +265,226 @@ router.delete("/vinculo/:id", async (req, res) => {
 
   } catch (err) {
     res.json({ error: true, message: err.message });
+  }
+});
+
+/*
+========================================
+UPLOAD FOTO COLABORADOR
+========================================
+*/
+/*
+========================================
+UPLOAD FOTO COLABORADOR (CREATE + UPDATE)
+========================================
+*/
+router.post("/upload", async (req, res) => {
+  try {
+    if (!req.headers["content-type"]?.includes("multipart/form-data")) {
+      return res.status(400).json({
+        error: true,
+        message: "Request precisa ser multipart/form-data",
+      });
+    }
+
+    const busboy = Busboy({ headers: req.headers });
+
+    const fields = {};
+    const filePromises = [];
+
+    /* =========================================
+       CAPTURA DOS CAMPOS
+    ========================================= */
+    busboy.on("field", (name, value) => {
+      fields[name] = value;
+    });
+
+    /* =========================================
+       CAPTURA DO ARQUIVO
+    ========================================= */
+    busboy.on("file", (fieldname, file, info) => {
+      const { filename, mimeType } = info;
+
+      if (!filename) {
+        file.resume();
+        return;
+      }
+
+      const promise = new Promise((resolve, reject) => {
+        const chunks = [];
+        let tamanho = 0;
+
+        file.on("data", (chunk) => {
+          chunks.push(chunk);
+          tamanho += chunk.length;
+        });
+
+        file.on("end", () => {
+          resolve({
+            filename,
+            mimeType,
+            buffer: Buffer.concat(chunks),
+            tamanho,
+          });
+        });
+
+        file.on("error", reject);
+      });
+
+      filePromises.push(promise);
+    });
+
+    /* =========================================
+       FINALIZAÇÃO DO UPLOAD
+    ========================================= */
+    busboy.on("finish", async () => {
+      try {
+        const { colaboradorId, colaborador, salaoId } = fields;
+
+        const files = await Promise.all(filePromises);
+
+        if (!files.length) {
+          return res.status(400).json({
+            error: true,
+            message: "Nenhum arquivo enviado",
+          });
+        }
+
+        let colaboradorDoc;
+
+        /* =========================================
+           CREATE
+        ========================================= */
+        if (!colaboradorId) {
+          if (!colaborador || !salaoId) {
+            return res.status(400).json({
+              error: true,
+              message: "Dados insuficientes para criação",
+            });
+          }
+
+          const colaboradorData = JSON.parse(colaborador);
+
+          colaboradorDoc = await Colaborador.create({
+            ...colaboradorData,
+          });
+
+          await SalaoColaborador.create({
+            salaoId,
+            colaboradorId: colaboradorDoc._id,
+            status: colaboradorData.vinculo || "A",
+          });
+
+          if (colaboradorData.especialidades?.length) {
+            await ColaboradorServico.insertMany(
+              colaboradorData.especialidades.map((servicoId) => ({
+                servicoId,
+                colaboradorId: colaboradorDoc._id,
+              }))
+            );
+          }
+        }
+
+        /* =========================================
+           UPDATE
+        ========================================= */
+        else {
+          if (!mongoose.Types.ObjectId.isValid(colaboradorId)) {
+            return res.status(400).json({
+              error: true,
+              message: "ID inválido",
+            });
+          }
+
+          colaboradorDoc = await Colaborador.findById(colaboradorId);
+
+          if (!colaboradorDoc) {
+            return res.status(404).json({
+              error: true,
+              message: "Colaborador não encontrado",
+            });
+          }
+        }
+
+        /* =========================================
+           REMOVE FOTO ANTIGA
+        ========================================= */
+        const arquivosAntigos = await Arquivos.find({
+          referenciaId: colaboradorDoc._id,
+          model: "Colaborador",
+        });
+
+        for (const arquivo of arquivosAntigos) {
+          await awsService.deleteFromS3(arquivo.caminhoArquivo);
+          await arquivo.deleteOne();
+        }
+
+        /* =========================================
+           UPLOAD PARA S3
+        ========================================= */
+        const arquivosDocs = [];
+
+        for (const f of files) {
+          const ext = f.filename.split(".").pop();
+
+          const key = `colaboradores/${colaboradorDoc._id}/${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2)}.${ext}`;
+
+          const upload = await awsService.uploadBufferToS3(
+            f.buffer,
+            key,
+            f.mimeType
+          );
+
+          if (upload.error) {
+            throw new Error(upload.message);
+          }
+
+          arquivosDocs.push({
+            referenciaId: colaboradorDoc._id,
+            model: "Colaborador",
+            nome: f.filename,
+            descricao: null,
+            caminhoArquivo: `${process.env.S3_BUCKET}/${key}`,
+            tipoMime: f.mimeType,
+            tamanho: f.tamanho,
+          });
+        }
+
+        await Arquivos.insertMany(arquivosDocs);
+
+        /* =========================================
+           ATUALIZA CAMPO FOTO NO COLABORADOR
+        ========================================= */
+        await Colaborador.findByIdAndUpdate(colaboradorDoc._id, {
+          foto: arquivosDocs[0].caminhoArquivo,
+        });
+
+        return res.status(200).json({
+          error: false,
+          message: "Upload realizado com sucesso",
+          colaboradorId: colaboradorDoc._id,
+          foto: arquivosDocs[0].caminhoArquivo,
+        });
+
+      } catch (err) {
+        console.error("Erro no upload colaborador:", err);
+        return res.status(500).json({
+          error: true,
+          message: err.message,
+        });
+      }
+    });
+
+    req.pipe(busboy);
+
+  } catch (err) {
+    console.error("Erro geral upload colaborador:", err);
+    res.status(500).json({
+      error: true,
+      message: "Erro interno no upload",
+    });
   }
 });
 

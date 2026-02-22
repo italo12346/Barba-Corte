@@ -5,12 +5,14 @@ import {
   DatePicker,
   SelectPicker,
   CheckPicker,
+  Uploader,
 } from "rsuite";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { allServicos } from "../../store/modules/colaboradores/actions";
+import { formatarTelefone } from "../../util/functionAux";
 
 export default function ColaboradorModal({
   open,
@@ -21,34 +23,36 @@ export default function ColaboradorModal({
   salaoId,
 }) {
   const dispatch = useDispatch();
-
-  // serviços vindos do Redux
-  const servicos = useSelector(
-    (state) => state.colaborador.servicos
-  );
-
-  // transforma para formato do picker
-  const especialidadesData = servicos.map((s) => ({
-    label: s.titulo,
-    value: s.id,
-  }));
+  const servicos = useSelector((state) => state.colaborador.servicos);
 
   // ===============================
-  // Inicializa form + carrega serviços
+  // Serviços formatados para picker
+  // ===============================
+  const especialidadesData = useMemo(() => {
+    return servicos.map((s) => ({
+      label: s.titulo,
+      value: s._id || s.id,
+    }));
+  }, [servicos]);
+
+  // ===============================
+  // Inicialização controlada
   // ===============================
   useEffect(() => {
     if (!open) return;
 
-    setForm((prev) => ({
-      _id: prev?._id,
-      nome: prev?.nome || "",
-      email: prev?.email || "",
-      telefone: prev?.telefone || "",
-      status: prev?.status || "A",
-      dataNascimento: prev?.dataNascimento || null,
-      sexo: prev?.sexo || "",
-      especialidades: prev?.especialidades || [],
-    }));
+    if (!form?._id) {
+      setForm({
+        nome: "",
+        email: "",
+        telefone: "",
+        status: "A",
+        dataNascimento: null,
+        sexo: "",
+        especialidades: [],
+        fotoFile: null,
+      });
+    }
 
     if (salaoId) {
       dispatch(allServicos(salaoId));
@@ -56,13 +60,22 @@ export default function ColaboradorModal({
   }, [open, salaoId]);
 
   // ===============================
-  // Change handler
+  // Change handler seguro
   // ===============================
   const handleChange = (value, name) => {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
+  };
+
+  // ===============================
+  // Upload de foto
+  // ===============================
+  const handleFotoChange = (files) => {
+    if (!files?.length) return;
+
+    handleChange(files[0].blobFile, "fotoFile");
   };
 
   // ===============================
@@ -83,6 +96,19 @@ export default function ColaboradorModal({
 
       <Modal.Body>
         <Form fluid layout="vertical">
+
+          {/* FOTO */}
+          <Form.Group>
+            <Form.ControlLabel>Foto</Form.ControlLabel>
+            <Uploader
+              autoUpload={false}
+              fileListVisible
+              accept="image/*"
+              listType="picture"
+              onChange={handleFotoChange}
+            />
+          </Form.Group>
+
           <Form.Group>
             <Form.ControlLabel>Nome</Form.ControlLabel>
             <Form.Control
@@ -103,8 +129,13 @@ export default function ColaboradorModal({
           <Form.Group>
             <Form.ControlLabel>Telefone</Form.ControlLabel>
             <Form.Control
-              value={form.telefone || ""}
-              onChange={(v) => handleChange(v, "telefone")}
+              value={formatarTelefone(form.telefone)}
+              onChange={(v) => {
+                const onlyNumbers = v.replace(/\D/g, "");
+                if (onlyNumbers.length <= 11) {
+                  handleChange(onlyNumbers, "telefone");
+                }
+              }}
             />
           </Form.Group>
 
@@ -120,38 +151,43 @@ export default function ColaboradorModal({
                   : null
               }
               onChange={(v) =>
-                handleChange(v, "dataNascimento")
+                handleChange(
+                  v ? v.toISOString() : null,
+                  "dataNascimento"
+                )
               }
             />
           </Form.Group>
 
-          <Form.Group>
-            <Form.ControlLabel>Sexo</Form.ControlLabel>
-            <SelectPicker
-              style={{ width: "100%" }}
-              data={[
-                { label: "Masculino", value: "M" },
-                { label: "Feminino", value: "F" },
-                { label: "Outro", value: "O" },
-              ]}
-              value={form.sexo || null}
-              onChange={(v) => handleChange(v, "sexo")}
-              cleanable
-            />
-          </Form.Group>
+          <div className="d-flex gap-3">
 
-          <Form.Group>
-            <Form.ControlLabel>Especialidades</Form.ControlLabel>
-            <CheckPicker
-              style={{ width: "100%" }}
-              data={especialidadesData}
-              value={form.especialidades || []}
-              onChange={(v) =>
-                handleChange(v, "especialidades")
-              }
-              placeholder="Selecione os serviços"
-            />
-          </Form.Group>
+            <Form.Group style={{ flex: 1 }}>
+              <Form.ControlLabel>Sexo</Form.ControlLabel>
+              <SelectPicker
+                style={{ width: "100%" }}
+                data={[
+                  { label: "Masculino", value: "M" },
+                  { label: "Feminino", value: "F" },
+                  { label: "Outro", value: "O" },
+                ]}
+                value={form.sexo || null}
+                onChange={(v) => handleChange(v, "sexo")}
+                cleanable
+              />
+            </Form.Group>
+
+            <Form.Group style={{ flex: 1 }}>
+              <Form.ControlLabel>Especialidades</Form.ControlLabel>
+              <CheckPicker
+                style={{ width: "100%" }}
+                data={especialidadesData}
+                value={form.especialidades || []}
+                onChange={(v) => handleChange(v, "especialidades")}
+                placeholder="Selecione os serviços"
+              />
+            </Form.Group>
+
+          </div>
         </Form>
       </Modal.Body>
 

@@ -7,7 +7,9 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 
 import PrivateLayout from "./layouts/PrivateLayout";
-import Colaboradores from "./pages/colaboradores";
+import Colaboradores from "./pages/Colaboradores";
+import ServicosPage from "./pages/Servicos";
+import Horario from "./pages/Horarios";
 
 const AppRoutes = () => {
   return (
@@ -42,6 +44,22 @@ const AppRoutes = () => {
           element={
             <PrivateLayout>
               <Colaboradores />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/servicos"
+          element={
+            <PrivateLayout>
+              <ServicosPage />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/horarios"
+          element={
+            <PrivateLayout>
+              <Horario />
             </PrivateLayout>
           }
         />

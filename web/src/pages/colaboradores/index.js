@@ -119,16 +119,15 @@ const salvar = () => {
       <div className="container-cliente">
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h1>Colaboradores</h1>
-          <Button className="btn" onClick={novo}>
+          <Button className="btn" size="lg" onClick={novo}>
             + Novo colaborador
           </Button>
         </div>
 
         {/* Tabela */}
-        <div className="card">
+        <div className="card-table ">
           <div className="card-body p-0">
             <Table
-              height={565}
               width={'100%'}
               data={lista}
               loading={loading}
