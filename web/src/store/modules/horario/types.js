@@ -1,0 +1,14 @@
+const types = {
+  UPDATE_HORARIO: "@horario/UPDATE_HORARIO",
+  RESET_HORARIO: "@horario/RESET_HORARIO",
+
+  ADD_HORARIO: "@horario/ADD_HORARIO",
+  SAVE_HORARIO: "@horario/SAVE_HORARIO",
+  REMOVE_HORARIO: "@horario/REMOVE_HORARIO",
+
+  ALL_HORARIOS: "@horario/ALL_HORARIOS",
+  ALL_SERVICOS: "@horario/ALL_SERVICOS",
+  FILTER_COLABORADORES: "@horario/FILTER_COLABORADORES",
+};
+
+export default types;

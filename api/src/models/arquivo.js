@@ -9,7 +9,7 @@ const arquivoSchema = new mongoose.Schema({
     model:{
         type: String,
         required: true,
-        enum: ['Salao','Servico',]
+        enum: ['Salao','Servico','Colaborador']
     },
     nome: {
         type: String,

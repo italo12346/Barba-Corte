@@ -2,6 +2,7 @@ import { Modal } from "rsuite";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadServicosColaborador } from "../../store/modules/colaboradores/actions";
+import { formatarTelefone, formatarData } from "../../util/functionAux";
 
 const ColaboradorViewModal = ({
   open,
@@ -11,31 +12,30 @@ const ColaboradorViewModal = ({
 }) => {
   const dispatch = useDispatch();
 
-  const {
-    servicosColaborador = {},
-    loadingServicosColaborador,
-  } = useSelector((state) => state.colaborador);
+  const { servicosColaborador = {}, loadingServicosColaborador } = useSelector(
+    (state) => state.colaborador,
+  );
 
   // =========================================
   // CARREGAR SERVIÇOS DO COLABORADOR
   // =========================================
-useEffect(() => {
-  if (!colaborador?.especialidades?.length) return;
+  useEffect(() => {
+    if (!colaborador?.especialidades?.length) return;
 
-  const faltando = colaborador.especialidades.filter(
-    (id) => !servicosColaborador[id]
-  );
+    const faltando = colaborador.especialidades.filter(
+      (id) => !servicosColaborador[id],
+    );
 
-  if (faltando.length) {
-    dispatch(loadServicosColaborador(faltando));
-  }
-}, [colaborador?.especialidades, servicosColaborador, dispatch]);
+    if (faltando.length) {
+      dispatch(loadServicosColaborador(faltando));
+    }
+  }, [colaborador?.especialidades, servicosColaborador, dispatch]);
 
-const servicosMap = useMemo(() => {
-  return servicosColaborador || {};
-}, [servicosColaborador]);
+  const servicosMap = useMemo(() => {
+    return servicosColaborador || {};
+  }, [servicosColaborador]);
 
-if (!colaborador) return null;
+  if (!colaborador) return null;
 
   console.log("especialidades:", colaborador.especialidades);
   console.log("servicosMap:", servicosMap);
@@ -43,20 +43,6 @@ if (!colaborador) return null;
   // =========================================
   // FORMATADORES
   // =========================================
-  const formatarData = (data) => {
-    if (!data) return "-";
-    return new Date(data).toLocaleDateString("pt-BR");
-  };
-
-  const formatarTelefone = (telefone) => {
-    if (!telefone) return "-";
-    const n = telefone.replace(/\D/g, "");
-    if (n.length === 11)
-      return n.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-    if (n.length === 10)
-      return n.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
-    return telefone;
-  };
 
   const getStatusBadge = (status) => {
     const map = { A: "bg-success", I: "bg-danger" };
@@ -69,11 +55,24 @@ if (!colaborador) return null;
         <Modal.Title>
           <div className="d-flex align-items-center gap-3">
             <div
-              className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
-              style={{ width: 50, height: 50, fontSize: 20 }}
+              className="rounded-circle overflow-hidden d-flex align-items-center justify-content-center bg-dark text-white"
+              style={{ width: 60, height: 60, fontSize: 22 }}
             >
-              {colaborador.nome?.charAt(0)}
+              {colaborador.foto ? (
+                <img
+                  src={colaborador.foto}
+                  alt={colaborador.nome}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                colaborador.nome?.charAt(0)
+              )}
             </div>
+
             <div>
               <h5 className="mb-0">{colaborador.nome}</h5>
               <small className="text-muted">{colaborador.email}</small>
@@ -122,9 +121,7 @@ if (!colaborador) return null;
 
             {/* MERCADO PAGO */}
             <div className="card shadow-sm mb-4">
-              <div className="card-header bg-dark text-white">
-                Mercado Pago
-              </div>
+              <div className="card-header bg-dark text-white">Mercado Pago</div>
               <div className="card-body">
                 <Info
                   label="Status da Conta"

@@ -41,25 +41,33 @@ console.log({data});
 ===================================================== */
 function* createColaborador({ payload }) {
   try {
-    console.log("🚀 Criando colaborador:", payload);
+    const { salaoId, fotoFile, ...data } = payload;
 
-    yield call(api.post, "/colaborador", payload);
+    if (!salaoId) {
+      throw new Error("salaoId obrigatório");
+    }
 
-    yield put({
-      type: types.CREATE_COLABORADOR_SUCCESS,
-    });
+    const formData = new FormData();
+    formData.append("salaoId", salaoId);
+    formData.append("colaborador", JSON.stringify(data));
+
+    if (fotoFile) {
+      formData.append("file", fotoFile);
+    }
+
+    yield call(api.post, "/colaborador/upload", formData);
+
+    yield put({ type: types.CREATE_COLABORADOR_SUCCESS });
 
     yield put({
       type: types.LIST_COLABORADORES_REQUEST,
-      payload: payload.salaoId,
+      payload: salaoId,
     });
 
   } catch (err) {
-    console.error("❌ Erro ao criar:", err.response?.data || err);
-
     yield put({
       type: types.CREATE_COLABORADOR_FAILURE,
-      error: err.response?.data?.message || "Erro ao criar",
+      error: err.response?.data?.message || err.message,
     });
   }
 }
@@ -69,37 +77,41 @@ function* createColaborador({ payload }) {
 ===================================================== */
 function* updateColaborador({ payload }) {
   try {
-    if (!payload || !payload.colaborador) {
-      console.error("UPDATE BLOQUEADO: payload.colaborador indefinido", payload);
-      return; // bloqueia update
+    const { colaborador, salaoId } = payload;
+
+    if (!colaborador?._id) {
+      throw new Error("Colaborador inválido");
     }
 
-    const { _id, ...data } = payload.colaborador;
+    const { _id, fotoFile, ...data } = colaborador;
 
-    if (!_id) {
-      console.error("UPDATE BLOQUEADO: colaborador sem _id", payload);
-      return;
+    // =========================
+    // Atualiza dados base
+    // =========================
+    yield call(api.put, `/colaborador/${_id}`, data);
+
+    // =========================
+    // Se tiver nova foto → upload separado
+    // =========================
+    if (fotoFile) {
+      const formData = new FormData();
+      formData.append("colaboradorId", _id);
+      formData.append("file", fotoFile);
+
+      yield call(api.post, "/colaborador/upload", formData);
     }
-
-    // PUT no backend
-    yield call(api.put, `/colaborador/${_id}`, {
-      ...data,
-      salaoId: payload.salaoId,
-    });
 
     yield put({ type: types.UPDATE_COLABORADOR_SUCCESS });
 
-    if (payload?.salaoId) {
-      yield put({
-        type: types.LIST_COLABORADORES_REQUEST,
-        payload: payload.salaoId,
-      });
-    }
+    yield put({
+      type: types.LIST_COLABORADORES_REQUEST,
+      payload: salaoId,
+    });
+
   } catch (err) {
-    console.error("Erro ao atualizar colaborador:", err);
     yield put({
       type: types.UPDATE_COLABORADOR_FAILURE,
-      error: err.message || err,
+      error: err.response?.data?.message || err.message,
     });
   }
 }

@@ -5,9 +5,14 @@ import {
   DatePicker,
   SelectPicker,
   CheckPicker,
+  Uploader,
 } from "rsuite";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
+import { allServicos } from "../../store/modules/colaboradores/actions";
+import { formatarTelefone } from "../../util/functionAux";
 
 export default function ColaboradorModal({
   open,
@@ -15,47 +20,66 @@ export default function ColaboradorModal({
   form,
   setForm,
   salvar,
+  salaoId,
 }) {
+  const dispatch = useDispatch();
+  const servicos = useSelector((state) => state.colaborador.servicos);
+
   // ===============================
-  // Inicializa estrutura do form
+  // Serviços formatados para picker
+  // ===============================
+  const especialidadesData = useMemo(() => {
+    return servicos.map((s) => ({
+      label: s.titulo,
+      value: s._id || s.id,
+    }));
+  }, [servicos]);
+
+  // ===============================
+  // Inicialização controlada
   // ===============================
   useEffect(() => {
     if (!open) return;
 
-    setForm((prev) => ({
-      _id: prev?._id, // ✅ mantém o ID correto
-      nome: prev?.nome || "",
-      email: prev?.email || "",
-      telefone: prev?.telefone || "",
-      status: prev?.status || "A",
-      dataNascimento: prev?.dataNascimento || null,
-      sexo: prev?.sexo || "",
-      especialidades: prev?.especialidades || [],
-    }));
-  }, [open]);
+    if (!form?._id) {
+      setForm({
+        nome: "",
+        email: "",
+        telefone: "",
+        status: "A",
+        dataNascimento: null,
+        sexo: "",
+        especialidades: [],
+        fotoFile: null,
+      });
+    }
+
+    if (salaoId) {
+      dispatch(allServicos(salaoId));
+    }
+  }, [open, salaoId]);
 
   // ===============================
-  // Change handler genérico
+  // Change handler seguro
   // ===============================
   const handleChange = (value, name) => {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   // ===============================
-  // Mock especialidades
-  // (depois você conecta com backend)
+  // Upload de foto
   // ===============================
-  const especialidadesData = [
-    { label: "Corte", value: "corte" },
-    { label: "Barba", value: "barba" },
-    { label: "Sobrancelha", value: "sobrancelha" },
-  ];
+  const handleFotoChange = (files) => {
+    if (!files?.length) return;
+
+    handleChange(files[0].blobFile, "fotoFile");
+  };
 
   // ===============================
-  // Close com reset
+  // Close
   // ===============================
   const handleClose = () => {
     setForm({});
@@ -66,44 +90,55 @@ export default function ColaboradorModal({
     <Modal size="md" open={open} onClose={handleClose}>
       <Modal.Header>
         <Modal.Title>
-          {form.id ? "Editar colaborador" : "Novo colaborador"}
+          {form._id ? "Editar colaborador" : "Novo colaborador"}
         </Modal.Title>
       </Modal.Header>
 
       <Modal.Body>
         <Form fluid layout="vertical">
-          {/* Nome */}
+
+          {/* FOTO */}
+          <Form.Group>
+            <Form.ControlLabel>Foto</Form.ControlLabel>
+            <Uploader
+              autoUpload={false}
+              fileListVisible
+              accept="image/*"
+              listType="picture"
+              onChange={handleFotoChange}
+            />
+          </Form.Group>
+
           <Form.Group>
             <Form.ControlLabel>Nome</Form.ControlLabel>
             <Form.Control
-              name="nome"
               value={form.nome || ""}
-              onChange={(value) => handleChange(value, "nome")}
+              onChange={(v) => handleChange(v, "nome")}
             />
           </Form.Group>
 
-          {/* Email */}
           <Form.Group>
             <Form.ControlLabel>Email</Form.ControlLabel>
             <Form.Control
-              name="email"
               type="email"
               value={form.email || ""}
-              onChange={(value) => handleChange(value, "email")}
+              onChange={(v) => handleChange(v, "email")}
             />
           </Form.Group>
 
-          {/* Telefone */}
           <Form.Group>
             <Form.ControlLabel>Telefone</Form.ControlLabel>
             <Form.Control
-              name="telefone"
-              value={form.telefone || ""}
-              onChange={(value) => handleChange(value, "telefone")}
+              value={formatarTelefone(form.telefone)}
+              onChange={(v) => {
+                const onlyNumbers = v.replace(/\D/g, "");
+                if (onlyNumbers.length <= 11) {
+                  handleChange(onlyNumbers, "telefone");
+                }
+              }}
             />
           </Form.Group>
 
-          {/* Data de Nascimento */}
           <Form.Group>
             <Form.ControlLabel>Data de Nascimento</Form.ControlLabel>
             <DatePicker
@@ -111,42 +146,48 @@ export default function ColaboradorModal({
               format="dd/MM/yyyy"
               oneTap
               value={
-                form.dataNascimento && !isNaN(new Date(form.dataNascimento))
+                form.dataNascimento
                   ? new Date(form.dataNascimento)
                   : null
               }
-              onChange={(value) => handleChange(value, "dataNascimento")}
+              onChange={(v) =>
+                handleChange(
+                  v ? v.toISOString() : null,
+                  "dataNascimento"
+                )
+              }
             />
           </Form.Group>
 
-          {/* Sexo */}
-          <Form.Group>
-            <Form.ControlLabel>Sexo</Form.ControlLabel>
-            <SelectPicker
-              style={{ width: "100%" }}
-              data={[
-                { label: "Masculino", value: "M" },
-                { label: "Feminino", value: "F" },
-                { label: "Outro", value: "O" },
-              ]}
-              value={form.sexo || null}
-              onChange={(value) => handleChange(value, "sexo")}
-              placeholder="Selecione"
-              cleanable
-            />
-          </Form.Group>
+          <div className="d-flex gap-3">
 
-          {/* Especialidades */}
-          <Form.Group>
-            <Form.ControlLabel>Especialidades</Form.ControlLabel>
-            <CheckPicker
-              style={{ width: "100%" }}
-              data={especialidadesData}
-              value={form.especialidades || []}
-              onChange={(value) => handleChange(value, "especialidades")}
-              placeholder="Selecione as especialidades"
-            />
-          </Form.Group>
+            <Form.Group style={{ flex: 1 }}>
+              <Form.ControlLabel>Sexo</Form.ControlLabel>
+              <SelectPicker
+                style={{ width: "100%" }}
+                data={[
+                  { label: "Masculino", value: "M" },
+                  { label: "Feminino", value: "F" },
+                  { label: "Outro", value: "O" },
+                ]}
+                value={form.sexo || null}
+                onChange={(v) => handleChange(v, "sexo")}
+                cleanable
+              />
+            </Form.Group>
+
+            <Form.Group style={{ flex: 1 }}>
+              <Form.ControlLabel>Especialidades</Form.ControlLabel>
+              <CheckPicker
+                style={{ width: "100%" }}
+                data={especialidadesData}
+                value={form.especialidades || []}
+                onChange={(v) => handleChange(v, "especialidades")}
+                placeholder="Selecione os serviços"
+              />
+            </Form.Group>
+
+          </div>
         </Form>
       </Modal.Body>
 
@@ -154,6 +195,7 @@ export default function ColaboradorModal({
         <Button appearance="primary" onClick={salvar}>
           Salvar
         </Button>
+
         <Button appearance="subtle" onClick={handleClose}>
           Cancelar
         </Button>
