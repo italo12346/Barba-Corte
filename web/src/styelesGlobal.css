@@ -1,7 +1,7 @@
 :root {
   --primary: rgb(36, 0, 70);
-  --dark: #10002B;
-  --dark2: #5A189A;
+  --dark: #10002b;
+  --dark2: #5a189a;
   --danger: #d62828;
   --success: #06d6a0;
   --white: #f5f6f7e0;
@@ -20,13 +20,13 @@ header {
   height: 5rem;
 }
 
-header>div {
+header > div {
   cursor: pointer;
   transition: 0.5s;
   padding: 10px 20px;
 }
 
-header>div:hover {
+header > div:hover {
   background-color: rgba(255, 255, 255, 0.08);
   opacity: 1;
   transition: 0.5s;
@@ -44,7 +44,6 @@ header span:not(.mdi) {
 aside {
   position: absolute;
   background-color: var(--dark);
-
 }
 
 aside ul li a {
@@ -90,7 +89,6 @@ aside ul li a:hover .mdi {
 .container {
   position: relative;
   left: 16.66%;
-
 }
 
 .calendar-wrapper {
@@ -127,11 +125,9 @@ aside ul li a:hover .mdi {
 
 /* ===== TOOLBAR ===== */
 
-
 .rbc-toolbar-label {
   font-weight: 600;
   font-size: 1.1rem;
-
 }
 
 .rbc-toolbar button {
@@ -172,9 +168,6 @@ aside ul li a:hover .mdi {
   border-top: 1px solid;
 }
 
-
-
-
 /* ===== LATERAL DE HORÁRIOS ===== */
 .rbc-time-gutter {
   display: flex !important;
@@ -185,8 +178,6 @@ aside ul li a:hover .mdi {
 /* ===== DIA ATUAL ===== */
 .rbc-today {
   background-color: rgb(36, 0, 70, 0.26) !important;
-
-
 }
 
 /* ===== EVENTOS ===== */
@@ -209,7 +200,7 @@ aside ul li a:hover .mdi {
   border-radius: 16px;
   padding: 16px;
   border: 1px solid var(--primary);
-  min-height: 565px;
+  min-height: 70vh;
 }
 
 /* Modal */
@@ -219,9 +210,7 @@ aside ul li a:hover .mdi {
   align-items: center;
   justify-content: center;
 
-  background: linear-gradient(135deg,
-      var(--primary),
-      var(--dark2));
+  background: linear-gradient(135deg, var(--primary), var(--dark2));
 
   color: var(--white) !important;
   border-radius: 10px 10px 0 0;
@@ -239,14 +228,11 @@ aside ul li a:hover .mdi {
 .color-w {
   text-align: center;
   color: var(--white) !important;
-
 }
 
 .agendamento-modal .rs-modal-header,
 .card-header {
-  background: linear-gradient(135deg,
-      var(--primary),
-      var(--dark2));
+  background: linear-gradient(135deg, var(--primary), var(--dark2));
 }
 
 .rs-modal-title {
@@ -257,7 +243,6 @@ aside ul li a:hover .mdi {
 .agendamento-modal .rs-modal-body {
   background: var(--white);
 }
-
 
 .agendamento-card {
   background: #fff;
@@ -351,10 +336,10 @@ aside ul li a:hover .mdi {
     margin: 0 -2rem;
     padding: 0;
   }
-.container-cliente > div{
-  display: flex;
-  flex-direction: column;
-}
+  .container-cliente > div {
+    display: flex;
+    flex-direction: column;
+  }
   .modal-select,
   .rs-form-group {
     gap: 0 !important;
@@ -363,6 +348,5 @@ aside ul li a:hover .mdi {
     width: 100% !important;
     overflow: auto;
     /* se quiser remover padding também */
-
   }
 }

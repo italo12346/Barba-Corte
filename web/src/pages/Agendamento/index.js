@@ -12,9 +12,7 @@ const localizer = momentLocalizer(moment);
 const Agendamento = () => {
   const dispatch = useDispatch();
 
-  const agendamentos = useSelector(
-    (state) => state.agendamento.agendamentos
-  );
+  const agendamentos = useSelector((state) => state.agendamento.agendamentos);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
@@ -36,11 +34,7 @@ const Agendamento = () => {
       title: a.servicoId?.titulo || "Agendamento",
 
       start: moment.utc(a.dataAgendamento).local().toDate(),
-      end: moment
-        .utc(a.dataAgendamento)
-        .local()
-        .add(30, "minutes")
-        .toDate(),
+      end: moment.utc(a.dataAgendamento).local().add(30, "minutes").toDate(),
 
       resource: a, // 👈 GUARDA O OBJETO COMPLETO
     }));
@@ -75,7 +69,7 @@ const Agendamento = () => {
           <Calendar
             localizer={localizer}
             events={eventos}
-            onSelectEvent={handleSelectEvent}  
+            onSelectEvent={handleSelectEvent}
             onRangeChange={(periodo) => {
               const { start, end } = formatRange(periodo);
 
@@ -91,7 +85,7 @@ const Agendamento = () => {
             step={60}
             timeslots={1}
             popup
-            style={{ height: 600, width: "83%" }}
+            style={{ height: "70vh", width: "83%" }}
             components={{
               event: EventCard,
             }}

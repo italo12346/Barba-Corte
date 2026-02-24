@@ -1,9 +1,9 @@
-import Types from './types';
+import Types from "./types";
 
 // GET
 export const getClientes = (clientes) => ({
   type: Types.GET_CLIENTES_REQUEST,
-   payload: clientes,
+  payload: clientes,
 });
 
 export const getClientesSuccess = (clientes) => ({
@@ -34,17 +34,17 @@ export const createClienteFailure = (error) => ({
 
 // UPDATE
 export const updateCliente = (cliente) => ({
-  type: Types.UPDATE_CLIENTE_REQUEST,
+  type: Types.EDIT_CLIENTE_REQUEST,
   payload: cliente,
 });
 
 export const updateClienteSuccess = (cliente) => ({
-  type: Types.UPDATE_CLIENTE_SUCCESS,
+  type: Types.EDIT_CLIENTE_SUCCESS,
   payload: cliente,
 });
 
 export const updateClienteFailure = (error) => ({
-  type: Types.UPDATE_CLIENTE_FAILURE,
+  type: Types.EDIT_CLIENTE_FAILURE,
   payload: error,
 });
 

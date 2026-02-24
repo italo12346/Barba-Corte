@@ -4,14 +4,14 @@ import { Table, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
 
 import * as actions from "../../store/modules/cliente/actions";
+import ClienteViewModal from "../../components/clienteViewModal";
 import ClienteModal from "../../components/clienteModal";
-
+const { formatarTelefone, formatarData } = require("../../util/functionAux");
 const { Column, HeaderCell, Cell } = Table;
 
 const Clientes = () => {
   const dispatch = useDispatch();
 
-  // Redux state
   const {
     data = [],
     loading = false,
@@ -19,49 +19,68 @@ const Clientes = () => {
     loadingAgendamentos = false,
   } = useSelector((state) => state.cliente);
 
-  // Modal (Visualizar Cliente)
-  const [modalOpen, setModalOpen] = useState(false);
+  // ===============================
+  // MODAL VISUALIZAR
+  // ===============================
+  const [viewOpen, setViewOpen] = useState(false);
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
 
-  const formatarTelefone = (telefone) => {
-    if (!telefone) return "-";
-    const numeros = telefone.replace(/\D/g, "");
+  // ===============================
+  // MODAL CREATE / EDIT
+  // ===============================
+  const [formOpen, setFormOpen] = useState(false);
+  const [form, setForm] = useState({});
 
-    if (numeros.length === 11) {
-      return numeros.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-    }
-
-    if (numeros.length === 10) {
-      return numeros.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
-    }
-
-    return telefone;
-  };
-
-  // Buscar clientes ao montar
+  // ===============================
+  // INIT
+  // ===============================
   useEffect(() => {
     dispatch(actions.getClientes());
   }, [dispatch]);
 
+  // ===============================
+  // SALVAR CLIENTE
+  // ===============================
+  const salvar = () => {
+    if (form._id) {
+      dispatch(actions.updateCliente(form));
+    } else {
+      dispatch(actions.createCliente(form));
+    }
+
+    setFormOpen(false);
+  };
+
   return (
     <div className="container p-4">
       <div className="container-cliente">
-        {/* Header */}
+        {/* HEADER */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h1>Clientes</h1>
+
+          <Button
+            className="btn"
+            onClick={() => {
+              setForm({});
+              setFormOpen(true);
+            }}
+          >
+            + Novo Cliente
+          </Button>
         </div>
 
-        {/* Tabela */}
-        <div className="card-table ">
+        {/* TABELA */}
+        <div className="card-table">
           <div className="card-body p-0">
             <Table
-              width={'100%'}
+              height={400}
               data={Array.isArray(data) ? data : []}
               loading={loading}
               rowKey="_id"
               bordered
               hover
               cellBordered
+              autoHeight
             >
               <Column flexGrow={2}>
                 <HeaderCell>Nome</HeaderCell>
@@ -75,12 +94,12 @@ const Clientes = () => {
 
               <Column flexGrow={1}>
                 <HeaderCell>Telefone</HeaderCell>
-                <Cell>{(rowData) => formatarTelefone(rowData.telefone)}</Cell>
+                <Cell>{(rowData) => formatarTelefone(rowData?.telefone)}</Cell>
               </Column>
 
               <Column flexGrow={1}>
                 <HeaderCell>Cadastro</HeaderCell>
-                <Cell dataKey="dataCadastro" />
+                <Cell>{(rowData) => formatarData(rowData?.dataCadastro)}</Cell>
               </Column>
 
               <Column flexGrow={1}>
@@ -88,16 +107,47 @@ const Clientes = () => {
                 <Cell>
                   {(row) => (
                     <div className="actions d-flex gap-2">
+                      {/* 👁️ VISUALIZAR */}
                       <Button
                         appearance="subtle"
                         size="sm"
                         onClick={() => {
                           setClienteSelecionado(row);
-                          setModalOpen(true);
+                          setViewOpen(true);
                           dispatch(actions.getAgendamentosCliente(row._id));
                         }}
                       >
                         <span className="mdi mdi-eye" />
+                      </Button>
+
+                      {/* ✏️ EDITAR */}
+                      <Button
+                        appearance="subtle"
+                        size="sm"
+                        onClick={() => {
+                          setForm(row);
+                          setFormOpen(true);
+                        }}
+                      >
+                        <span className="mdi mdi-pencil" />
+                      </Button>
+
+                      {/* 🗑️ EXCLUIR */}
+                      <Button
+                        appearance="subtle"
+                        size="sm"
+                        color="red"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Deseja realmente excluir este cliente?",
+                            )
+                          ) {
+                            dispatch(actions.deleteCliente(row._id));
+                          }
+                        }}
+                      >
+                        <span className="mdi mdi-delete" />
                       </Button>
                     </div>
                   )}
@@ -108,13 +158,26 @@ const Clientes = () => {
         </div>
       </div>
 
-      {/* Modal Visualizar */}
-      <ClienteModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+      {/* ===============================
+          MODAL VISUALIZAR
+      =============================== */}
+      <ClienteViewModal
+        open={viewOpen}
+        onClose={() => setViewOpen(false)}
         cliente={clienteSelecionado}
         agendamentos={agendamentos}
         loading={loadingAgendamentos}
+      />
+
+      {/* ===============================
+          MODAL CREATE / EDIT
+      =============================== */}
+      <ClienteModal
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        form={form}
+        setForm={setForm}
+        salvar={salvar}
       />
     </div>
   );

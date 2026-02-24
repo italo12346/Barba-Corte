@@ -9,7 +9,7 @@ import {
   unlikeColaborador,
 } from "../../store/modules/colaboradores/actions";
 
-import ColaboradorModal from "../../components/colaboradorModal"; // criar/editar
+import ColaboradorModal from "../../components/colaboradorModal";
 import ColaboradorViewModal from "../../components/colaboradorViewModal";
 import consts from "../../consts/consts";
 
@@ -45,35 +45,38 @@ export default function Colaboradores() {
     setOpenForm(true);
   };
 
-const editar = (row) => {
-  setForm({
-    ...row,
-    vinculoId: row.vinculoId || row._id, // vinculoId do SalaoColaborador, ou _id se for mesmo
-    vinculo: row.status,                 // para atualizar status no vínculo
-  });
-  setOpenForm(true);
-};
+  const editar = (row) => {
+    setForm({
+      ...row,
+      vinculoId: row.vinculoId || row._id, // vinculoId do SalaoColaborador, ou _id se for mesmo
+      vinculo: row.status, // para atualizar status no vínculo
+    });
+    setOpenForm(true);
+  };
 
-const salvar = () => {
-  console.log("FORM NO SALVAR:", form);
+  const salvar = () => {
+    console.log("FORM NO SALVAR:", form);
 
-  if (form._id) {
-    console.log("DISPARANDO UPDATE com _id:", form._id);
-    dispatch(updateColaborador({
-      salaoId: consts.salaoId,
-      colaborador: { ...form }, // form deve ter _id
-    }));
-  } else {
-    console.log("DISPARANDO CREATE");
-    dispatch(createColaborador({
-      salaoId: consts.salaoId,
-      colaborador: { ...form },
-    }));
-  }
+    if (form._id) {
+      console.log("DISPARANDO UPDATE com _id:", form._id);
+      dispatch(
+        updateColaborador({
+          salaoId: consts.salaoId,
+          colaborador: { ...form }, // form deve ter _id
+        }),
+      );
+    } else {
+      console.log("DISPARANDO CREATE");
+      dispatch(
+        createColaborador({
+          salaoId: consts.salaoId,
+          colaborador: { ...form },
+        }),
+      );
+    }
 
-  setOpenForm(false);
-};
-
+    setOpenForm(false);
+  };
 
   const desvincular = (id) => {
     if (!window.confirm("Desvincular colaborador?")) return;
@@ -128,7 +131,7 @@ const salvar = () => {
         <div className="card-table ">
           <div className="card-body p-0">
             <Table
-              width={'100%'}
+              width={"100%"}
               data={lista}
               loading={loading}
               rowKey="id"
@@ -200,14 +203,14 @@ const salvar = () => {
         </div>
 
         {/* MODAL CRIAR / EDITAR */}
-<ColaboradorModal
-  open={openForm}
-  onClose={() => setOpenForm(false)}
-  form={form}
-  setForm={setForm}
-  salvar={salvar}
-  salaoId={consts.salaoId}
-/>
+        <ColaboradorModal
+          open={openForm}
+          onClose={() => setOpenForm(false)}
+          form={form}
+          setForm={setForm}
+          salvar={salvar}
+          salaoId={consts.salaoId}
+        />
 
         {/* MODAL VISUALIZAR 👁️ */}
         <ColaboradorViewModal
