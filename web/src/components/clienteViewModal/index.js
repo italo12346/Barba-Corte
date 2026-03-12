@@ -1,5 +1,5 @@
 import { Modal } from "rsuite";
-import { formatarTelefone,formatarData} from "../../util/functionAux";
+import { formatarTelefone, formatarData } from "../../util/functionAux";
 
 const ClienteModal = ({
   open,
@@ -9,8 +9,6 @@ const ClienteModal = ({
   loading = false,
 }) => {
   if (!cliente) return null;
-
-
 
   // =========================
   // BADGE STATUS DINÂMICO
@@ -33,9 +31,21 @@ const ClienteModal = ({
           <div className="d-flex align-items-center gap-3">
             <div
               className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
-              style={{ width: 50, height: 50, fontSize: 20 }}
+              style={{ width: 50, height: 50, fontSize: 20, overflow: "hidden" }}
             >
-              {cliente.nome?.charAt(0)}
+              {cliente.foto ? (
+                <img
+                  src={cliente.foto}
+                  alt={cliente.nome}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                cliente.nome?.charAt(0).toUpperCase()
+              )}
             </div>
 
             <div>
@@ -59,9 +69,7 @@ const ClienteModal = ({
                DADOS DO CLIENTE
             ========================== */}
             <div className="card shadow-sm mb-4">
-              <div className="card-header text-white">
-                Dados do Cliente
-              </div>
+              <div className="card-header text-white">Dados do Cliente</div>
 
               <div className="card-body row g-3">
                 <Info
@@ -113,9 +121,7 @@ const ClienteModal = ({
                         <td>{a.colaborador || "-"}</td>
                         <td>{formatarData(a.data)}</td>
                         <td>
-                          {a.valor
-                            ? `R$ ${Number(a.valor).toFixed(2)}`
-                            : "-"}
+                          {a.valor ? `R$ ${Number(a.valor).toFixed(2)}` : "-"}
                         </td>
                         <td>
                           <span className={`badge ${getStatusBadge(a.status)}`}>
@@ -133,7 +139,7 @@ const ClienteModal = ({
       </Modal.Body>
 
       <Modal.Footer>
-        <button className="btn btn-ha" onClick={onClose}>
+        <button className="btn btn-dark" onClick={onClose}>
           Fechar
         </button>
       </Modal.Footer>

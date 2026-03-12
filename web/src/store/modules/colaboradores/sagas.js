@@ -41,23 +41,35 @@ console.log({data});
 ===================================================== */
 function* createColaborador({ payload }) {
   try {
-    const { salaoId, fotoFile, ...data } = payload;
+    const { salaoId, fotoFile, ...colaborador } = payload;
 
-    if (!salaoId) {
-      throw new Error("salaoId obrigatório");
-    }
+    const requestBody = {
+      salaoId,
+      colaborador,
+    };
 
-    const formData = new FormData();
-    formData.append("salaoId", salaoId);
-    formData.append("colaborador", JSON.stringify(data));
+    const { data } = yield call(
+      api.post,
+      "/colaborador",
+      requestBody
+    );
 
-    if (fotoFile) {
+    /* upload da foto separado (se houver) */
+    if (fotoFile && data.colaboradorId) {
+      const formData = new FormData();
+
+      formData.append("colaboradorId", data.colaboradorId);
       formData.append("file", fotoFile);
+
+      yield call(api.post, "/colaborador/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
     }
 
-    yield call(api.post, "/colaborador/upload", formData);
-
-    yield put({ type: types.CREATE_COLABORADOR_SUCCESS });
+    yield put({
+      type: types.CREATE_COLABORADOR_SUCCESS,
+      payload: data,
+    });
 
     yield put({
       type: types.LIST_COLABORADORES_REQUEST,
@@ -71,7 +83,6 @@ function* createColaborador({ payload }) {
     });
   }
 }
-
 /* =====================================================
    ATUALIZAR COLABORADOR
 ===================================================== */

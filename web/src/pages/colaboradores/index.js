@@ -70,7 +70,7 @@ export default function Colaboradores() {
       dispatch(
         createColaborador({
           salaoId: consts.salaoId,
-          colaborador: { ...form },
+          ...form,
         }),
       );
     }

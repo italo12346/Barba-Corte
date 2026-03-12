@@ -7,7 +7,7 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 
 import PrivateLayout from "./layouts/PrivateLayout";
-import Colaboradores from "./pages/colaboradores";
+import Colaboradores from "./pages/Colaboradores";
 import ServicosPage from "./pages/Servicos";
 import Horario from "./pages/Horarios";
 

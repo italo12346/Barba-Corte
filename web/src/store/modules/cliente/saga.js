@@ -56,21 +56,35 @@ function* createCliente({ payload }) {
 ===================================================== */
 function* updateCliente({ payload }) {
   try {
-    const { data } = yield call(api.put, `/cliente/${payload._id}`, payload);
+
+    const formData = new FormData();
+
+    formData.append("clienteId", payload._id);
+    formData.append("cliente", JSON.stringify(payload));
+
+    // ENVIA FOTO SOMENTE SE EXISTIR
+    if (payload.fotoFile instanceof File) {
+      formData.append("file", payload.fotoFile);
+    }
+
+    const { data } = yield call(api.post, "/cliente/upload", formData);
 
     yield put({
       type: types.EDIT_CLIENTE_SUCCESS,
-      payload: data.cliente,
+      payload: data,
     });
 
     yield put({
       type: types.GET_CLIENTES_REQUEST,
     });
+
   } catch (err) {
+
     yield put({
       type: types.EDIT_CLIENTE_FAILURE,
-      payload: err.message,
+      payload: err.response?.data?.message || err.message,
     });
+
   }
 }
 
