@@ -11,6 +11,6 @@ export default function* rootSaga() {
     clienteSaga(),
     colaboradorSaga(),
     servicoSaga(),
-    horarioSaga
+    horarioSaga()
   ]);
 }

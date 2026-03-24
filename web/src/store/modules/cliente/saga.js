@@ -93,7 +93,7 @@ function* updateCliente({ payload }) {
 ===================================================== */
 function* deleteCliente({ payload }) {
   try {
-    yield call(api.delete, `/cliente/${payload}`);
+    yield call(api.delete, `/cliente/vinculo/${payload}`);
 
     yield put({
       type: types.DELETE_CLIENTE_SUCCESS,

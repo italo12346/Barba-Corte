@@ -1,11 +1,12 @@
-import moment from "moment";
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useDispatch, useSelector } from "react-redux";
 import types from "../../store/modules/agendamento/types";
 import EventCard from "../../components/eventCard";
-import AgendamentoModal from "../../components/AgendamentoModal";
+import AgendamentoViewModal from "../../components/AgendamentoViewModal";
+import moment from "moment";
+import 'moment/locale/pt-br';
 
 const localizer = momentLocalizer(moment);
 
@@ -79,7 +80,6 @@ const Agendamento = () => {
               });
             }}
             defaultView="week"
-            selectable
             min={new Date(1970, 1, 1, 8, 0, 0)}
             max={new Date(1970, 1, 1, 18, 0, 0)}
             step={60}
@@ -94,7 +94,7 @@ const Agendamento = () => {
       </div>
 
       {/* 🔥 MODAL */}
-      <AgendamentoModal
+      <AgendamentoViewModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         agendamento={agendamentoSelecionado}

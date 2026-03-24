@@ -1,50 +1,81 @@
-import types from "./types";
+import Types from "./types";
 
-export function updateHorario(payload) {
-  return {
-    type: types.UPDATE_HORARIO,
-    payload,
-  };
-}
+// ─────────────────────────────────────────────────────────
+// LISTAR
+// ─────────────────────────────────────────────────────────
 
-export function resetHorario() {
-  return {
-    type: types.RESET_HORARIO,
-  };
-}
+/**
+ * Busca todos os horários do salão (e opcionalmente filtra por colaborador/dia).
+ * @param {string} salaoId
+ * @param {Object} [filtros] - { colaboradorId?, diaSemana? }
+ */
+export const allHorarios = (salaoId, filtros = {}) => ({
+  type: Types.ALL_HORARIOS_REQUEST,
+  payload: { salaoId, ...filtros },
+});
 
-export function addHorario() {
-  return {
-    type: types.ADD_HORARIO,
-  };
-}
+// ─────────────────────────────────────────────────────────
+// CRIAR
+// ─────────────────────────────────────────────────────────
 
-export function allHorarios() {
-  return {
-    type: types.ALL_HORARIOS,
-  };
-}
+/**
+ * Cria um novo horário de trabalho para um colaborador.
+ *
+ * @param {Object} data
+ * @param {string}   data.salaoId
+ * @param {string}   data.colaboradorId
+ * @param {number[]} data.diasSemana   - ex.: [1, 2, 3]  (0=dom … 6=sáb)
+ * @param {string}   data.horaInicio  - "HH:mm"
+ * @param {string}   data.horaFim     - "HH:mm"
+ */
+export const createHorario = (data) => ({
+  type: Types.CREATE_HORARIO_REQUEST,
+  payload: data,
+});
 
-export function saveHorario() {
-  return {
-    type: types.SAVE_HORARIO,
-  };
-}
+// ─────────────────────────────────────────────────────────
+// ATUALIZAR (pronto para quando a API tiver PUT)
+// ─────────────────────────────────────────────────────────
 
-export function removeHorario() {
-  return {
-    type: types.REMOVE_HORARIO,
-  };
-}
+/**
+ * Atualiza um horário existente.
+ *
+ * @param {string} horarioId
+ * @param {Object} data - mesmos campos do createHorario
+ */
+export const updateHorario = (horarioId, data) => ({
+  type: Types.UPDATE_HORARIO_REQUEST,
+  payload: { horarioId, ...data },
+});
 
-export function allServicos() {
-  return {
-    type: types.ALL_SERVICOS,
-  };
-}
+// ─────────────────────────────────────────────────────────
+// UI — MODAL
+// ─────────────────────────────────────────────────────────
 
-export function filterColaboradores() {
-  return {
-    type: types.FILTER_COLABORADORES,
-  };
-}
+/**
+ * Abre o modal de criação/edição de horário.
+ *
+ * @param {Object} [slotData] - dados pré-preenchidos vindos do calendário
+ * @param {string}   [slotData.colaboradorId]
+ * @param {number[]} [slotData.diasSemana]
+ * @param {string}   [slotData.horaInicio]
+ * @param {string}   [slotData.horaFim]
+ * @param {string}   [slotData.horarioId]  - presente quando é edição
+ */
+export const openHorarioModal = (slotData = {}) => ({
+  type: Types.OPEN_HORARIO_MODAL,
+  payload: slotData,
+});
+
+export const closeHorarioModal = () => ({
+  type: Types.CLOSE_HORARIO_MODAL,
+});
+
+// ─────────────────────────────────────────────────────────
+// UI — VIEW DO CALENDÁRIO
+// ─────────────────────────────────────────────────────────
+
+export const setCalendarView = (view) => ({
+  type: Types.SET_CALENDAR_VIEW,
+  payload: view,
+});

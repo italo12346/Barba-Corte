@@ -142,8 +142,8 @@ const Clientes = () => {
                             window.confirm(
                               "Deseja realmente excluir este cliente?",
                             )
-                          ) {
-                            dispatch(actions.deleteCliente(row._id));
+                          ) {    
+                            dispatch(actions.deleteCliente(row.vinculoId));
                           }
                         }}
                       >
