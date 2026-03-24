@@ -7,16 +7,17 @@ import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 
 import PrivateLayout from "./layouts/PrivateLayout";
+import Colaboradores from "./pages/Colaboradores";
+import ServicosPage from "./pages/Servicos";
+import Horario from "./pages/Horarios";
 
 const AppRoutes = () => {
   return (
     <Router>
       <Routes>
-
         {/* ROTA PÚBLICA */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
-
 
         {/* ROTAS PRIVADAS */}
         <Route
@@ -36,7 +37,30 @@ const AppRoutes = () => {
             </PrivateLayout>
           }
         />
-
+        <Route
+          path="/colaboradores"
+          element={
+            <PrivateLayout>
+              <Colaboradores />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/servicos"
+          element={
+            <PrivateLayout>
+              <ServicosPage />
+            </PrivateLayout>
+          }
+        />
+        <Route
+          path="/horarios"
+          element={
+            <PrivateLayout>
+              <Horario />
+            </PrivateLayout>
+          }
+        />
       </Routes>
     </Router>
   );

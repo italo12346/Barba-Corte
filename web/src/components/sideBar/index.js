@@ -37,6 +37,17 @@ const Sidebar = () => {
             <span className="ms-2">Clientes</span>
           </NavLink>
         </li>
+        <li>
+          <NavLink
+            to="/colaboradores"
+            className={({ isActive }) =>
+              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
+            }
+          >
+            <span className="mdi mdi-card-account-details-outline fs-5"></span>
+            <span className="ms-2">Colaboradores</span>
+          </NavLink>
+        </li>
 
         <li>
           <NavLink

@@ -429,4 +429,141 @@ router.get("/cliente/:clienteId", async (req, res) => {
   }
 });
 
+/*
+=====================================
+ATUALIZAR AGENDAMENTO
+PUT /agendamento/:id
+=====================================
+*/
+
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      servicoId,
+      clienteId,
+      colaboradorId,
+      dataAgendamento,
+      status,
+      observacoes,
+    } = req.body;
+
+    const agendamento = await Agendamento.findById(id);
+
+    if (!agendamento) {
+      return res.status(404).json({
+        error: true,
+        message: "Agendamento não encontrado",
+      });
+    }
+
+    // Se mudou data ou colaborador → verifica conflito de horário
+    const novaData = dataAgendamento
+      ? moment.tz(dataAgendamento, TZ)
+      : moment.tz(agendamento.dataAgendamento, TZ);
+
+    const novoColaboradorId = colaboradorId || agendamento.colaboradorId;
+
+    const inicio = novaData.clone().seconds(0).milliseconds(0).toDate();
+    const fim = moment(inicio).add(1, "minute").toDate();
+
+    const conflito = await Agendamento.findOne({
+      _id: { $ne: id }, // ignora o próprio agendamento
+      colaboradorId: novoColaboradorId,
+      dataAgendamento: { $gte: inicio, $lt: fim },
+      status: { $in: ["aguardando_pagamento", "confirmado"] },
+    });
+
+    if (conflito) {
+      return res.status(409).json({
+        error: true,
+        message: "Horário já reservado para este colaborador",
+      });
+    }
+
+    // Atualiza apenas os campos enviados
+    if (servicoId) agendamento.servicoId = servicoId;
+    if (clienteId) agendamento.clienteId = clienteId;
+    if (colaboradorId) agendamento.colaboradorId = colaboradorId;
+    if (dataAgendamento) agendamento.dataAgendamento = novaData.toDate();
+    if (status) agendamento.status = status;
+    if (observacoes !== undefined) agendamento.observacoes = observacoes;
+
+    // Se trocou serviço → atualiza valor
+    if (servicoId && servicoId !== String(agendamento.servicoId)) {
+      const servico = await Servico.findById(servicoId);
+      if (servico) {
+        agendamento.valorServico = servico.preco;
+        agendamento.comissao = servico.comissao;
+      }
+    }
+
+    await agendamento.save();
+
+    // Retorna populado igual ao filter
+    const populado = await Agendamento.findById(agendamento._id).populate([
+      { path: "servicoId", select: "titulo duracao preco" },
+      { path: "colaboradorId", select: "nome" },
+      { path: "clienteId", select: "nome" },
+    ]);
+
+    return res.json({
+      error: false,
+      agendamento: populado,
+    });
+
+  } catch (err) {
+    console.error("Erro update agendamento:", err);
+    return res.status(500).json({
+      error: true,
+      message: "Erro ao atualizar agendamento",
+    });
+  }
+});
+
+/*
+=====================================
+EXCLUIR AGENDAMENTO
+DELETE /agendamento/:id
+=====================================
+*/
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const agendamento = await Agendamento.findById(id);
+
+    if (!agendamento) {
+      return res.status(404).json({
+        error: true,
+        message: "Agendamento não encontrado",
+      });
+    }
+
+    // Impede exclusão de agendamento já confirmado/concluído (opcional — remova se quiser)
+    if (agendamento.status === "concluido") {
+      return res.status(400).json({
+        error: true,
+        message: "Não é possível excluir um agendamento já concluído",
+      });
+    }
+
+    await Agendamento.findByIdAndDelete(id);
+
+    return res.json({
+      error: false,
+      message: "Agendamento excluído com sucesso",
+    });
+
+  } catch (err) {
+    console.error("Erro delete agendamento:", err);
+    return res.status(500).json({
+      error: true,
+      message: "Erro ao excluir agendamento",
+    });
+  }
+});
+
+
 module.exports = router;

@@ -1,4 +1,5 @@
 import { Modal } from "rsuite";
+import { formatarTelefone, formatarData } from "../../util/functionAux";
 
 const ClienteModal = ({
   open,
@@ -9,35 +10,18 @@ const ClienteModal = ({
 }) => {
   if (!cliente) return null;
 
-  // ✅ Função para formatar datas
-  const formatarData = (data) => {
-    if (!data) return "-";
-    return new Date(data).toLocaleDateString("pt-BR");
-  };
+  // =========================
+  // BADGE STATUS DINÂMICO
+  // =========================
+  const getStatusBadge = (status) => {
+    const map = {
+      confirmado: "bg-success",
+      pendente: "bg-warning text-dark",
+      cancelado: "bg-danger",
+      concluido: "bg-primary",
+    };
 
-  // ✅ Função para formatar telefone
-  const formatarTelefone = (telefone) => {
-    if (!telefone) return "-";
-
-    const numeros = telefone.replace(/\D/g, "");
-
-    if (numeros.length === 11) {
-      // Celular (99) 99999-9999
-      return numeros.replace(
-        /^(\d{2})(\d{5})(\d{4})$/,
-        "($1) $2-$3"
-      );
-    }
-
-    if (numeros.length === 10) {
-      // Fixo (99) 9999-9999
-      return numeros.replace(
-        /^(\d{2})(\d{4})(\d{4})$/,
-        "($1) $2-$3"
-      );
-    }
-
-    return telefone; // fallback
+    return map[status] || "bg-secondary";
   };
 
   return (
@@ -47,9 +31,21 @@ const ClienteModal = ({
           <div className="d-flex align-items-center gap-3">
             <div
               className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
-              style={{ width: 50, height: 50, fontSize: 20 }}
+              style={{ width: 50, height: 50, fontSize: 20, overflow: "hidden" }}
             >
-              {cliente.nome?.charAt(0)}
+              {cliente.foto ? (
+                <img
+                  src={cliente.foto}
+                  alt={cliente.nome}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                cliente.nome?.charAt(0).toUpperCase()
+              )}
             </div>
 
             <div>
@@ -73,9 +69,7 @@ const ClienteModal = ({
                DADOS DO CLIENTE
             ========================== */}
             <div className="card shadow-sm mb-4">
-              <div className="card-header bg-dark text-white">
-                Dados do Cliente
-              </div>
+              <div className="card-header text-white">Dados do Cliente</div>
 
               <div className="card-body row g-3">
                 <Info
@@ -93,7 +87,7 @@ const ClienteModal = ({
             </div>
 
             {/* =========================
-               AGENDAMENTOS
+               HISTÓRICO DE AGENDAMENTOS
             ========================== */}
             <div className="card shadow-sm">
               <div className="card-header bg-dark text-white">
@@ -115,7 +109,7 @@ const ClienteModal = ({
                   <tbody>
                     {agendamentos.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center py-3">
+                        <td colSpan={5} className="text-center py-3">
                           Nenhum agendamento encontrado
                         </td>
                       </tr>
@@ -123,12 +117,14 @@ const ClienteModal = ({
 
                     {agendamentos.map((a) => (
                       <tr key={a._id}>
-                        <td>{a.servico}</td>
-                        <td>{a.colaborador}</td>
+                        <td>{a.servico || "-"}</td>
+                        <td>{a.colaborador || "-"}</td>
                         <td>{formatarData(a.data)}</td>
-                        <td>R$ {a.valor}</td>
                         <td>
-                          <span className="badge bg-success">
+                          {a.valor ? `R$ ${Number(a.valor).toFixed(2)}` : "-"}
+                        </td>
+                        <td>
+                          <span className={`badge ${getStatusBadge(a.status)}`}>
                             {a.status}
                           </span>
                         </td>
