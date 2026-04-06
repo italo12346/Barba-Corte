@@ -1,24 +1,23 @@
 const types = {
-  // FILTER
-  FILTER_AGENDAMENTOS: '@agendamento/FILTER',
-  FILTER_AGENDAMENTOS_SUCCESS: '@agendamento/FILTER_SUCCESS',
-  FILTER_AGENDAMENTOS_ERROR: '@agendamento/FILTER_ERROR',
-  UPDATE_AGENDAMENTOS: '@agendamento/UPDATE',
+  // ── Listagem / Filtro ──────────────────────────────────────
+  FILTER_AGENDAMENTOS:         "agendamento/FILTER_AGENDAMENTOS",
+  FILTER_AGENDAMENTOS_SUCCESS: "agendamento/FILTER_AGENDAMENTOS_SUCCESS",
+  FILTER_AGENDAMENTOS_FAILURE: "agendamento/FILTER_AGENDAMENTOS_FAILURE",
 
-  // CREATE
-  CREATE_AGENDAMENTO: '@agendamento/CREATE',
-  CREATE_AGENDAMENTO_SUCCESS: '@agendamento/CREATE_SUCCESS',
-  CREATE_AGENDAMENTO_ERROR: '@agendamento/CREATE_ERROR',
+  // ── Criar ─────────────────────────────────────────────────
+  CREATE_AGENDAMENTO:         "agendamento/CREATE_AGENDAMENTO",
+  CREATE_AGENDAMENTO_SUCCESS: "agendamento/CREATE_AGENDAMENTO_SUCCESS",
+  CREATE_AGENDAMENTO_FAILURE: "agendamento/CREATE_AGENDAMENTO_FAILURE",
 
-  // UPDATE ONE
-  UPDATE_AGENDAMENTO: '@agendamento/UPDATE_ONE',
-  UPDATE_AGENDAMENTO_SUCCESS: '@agendamento/UPDATE_ONE_SUCCESS',
-  UPDATE_AGENDAMENTO_ERROR: '@agendamento/UPDATE_ONE_ERROR',
+  // ── Editar ────────────────────────────────────────────────
+  UPDATE_AGENDAMENTO:         "agendamento/UPDATE_AGENDAMENTO",
+  UPDATE_AGENDAMENTO_SUCCESS: "agendamento/UPDATE_AGENDAMENTO_SUCCESS",
+  UPDATE_AGENDAMENTO_FAILURE: "agendamento/UPDATE_AGENDAMENTO_FAILURE",
 
-  // DELETE
-  DELETE_AGENDAMENTO: '@agendamento/DELETE',
-  DELETE_AGENDAMENTO_SUCCESS: '@agendamento/DELETE_SUCCESS',
-  DELETE_AGENDAMENTO_ERROR: '@agendamento/DELETE_ERROR',
+  // ── Deletar ───────────────────────────────────────────────
+  DELETE_AGENDAMENTO:         "agendamento/DELETE_AGENDAMENTO",
+  DELETE_AGENDAMENTO_SUCCESS: "agendamento/DELETE_AGENDAMENTO_SUCCESS",
+  DELETE_AGENDAMENTO_FAILURE: "agendamento/DELETE_AGENDAMENTO_FAILURE",
 };
 
 export default types;

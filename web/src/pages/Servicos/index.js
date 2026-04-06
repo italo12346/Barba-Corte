@@ -122,7 +122,7 @@ const editar = (row) => {
               </Column>
 
               {/* Preço */}
-              <Column width={100}>
+              <Column flexGrow={3}>
                 <HeaderCell>Preço</HeaderCell>
                 <Cell>
                   {(row) =>
@@ -132,7 +132,7 @@ const editar = (row) => {
               </Column>
 
               {/* Duração */}
-              <Column width={100}>
+              <Column flexGrow={2}>
                 <HeaderCell>Duração</HeaderCell>
                 <Cell>
                     {(row) => formatarDuracao(row.duracao)}
@@ -140,7 +140,7 @@ const editar = (row) => {
               </Column>
 
               {/* Imagem */}
-              <Column width={120}>
+              <Column flexGrow={2}>
                 <HeaderCell>Imagem</HeaderCell>
                 <Cell>
                   {(row) => {
@@ -163,7 +163,7 @@ const editar = (row) => {
               </Column>
 
               {/* Ações */}
-              <Column width={180}>
+              <Column flexGrow={2}>
                 <HeaderCell>Ações</HeaderCell>
                 <Cell>
                   {(row) => (

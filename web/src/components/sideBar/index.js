@@ -1,81 +1,100 @@
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import logo from '../../assets/Logo barba&corte.png';
 
 const Sidebar = () => {
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 900);
+      if (window.innerWidth >= 900) setMenuAberto(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const links = [
+    { to: '/',              end: true, icon: 'mdi-calendar-check',              label: 'Agendamentos' },
+    { to: '/clientes',             icon: 'mdi-account-multiple',             label: 'Clientes' },
+    { to: '/colaboradores',        icon: 'mdi-card-account-details-outline', label: 'Colaboradores' },
+    { to: '/servicos',             icon: 'mdi-content-cut',                  label: 'Serviços' },
+    { to: '/horarios',             icon: 'mdi-clock',                        label: 'Horários' },
+  ];
+
+  // ── Desktop — sidebar original ────────────────────────────────────────────
+  if (!isMobile) {
+    return (
+      <aside className="col-2 vh-100 text-white">
+        <img src={logo} alt="Logo" className="img-fluid px-3 py-4" />
+        <ul className="list-unstyled px-3">
+          {links.map(({ to, end, icon, label }) => (
+            <li key={to} className="mb-3">
+              <NavLink
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
+                }
+              >
+                <span className={`mdi ${icon} fs-5`} />
+                <span className="ms-2">{label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    );
+  }
+
+  // ── Mobile — topbar + drawer ──────────────────────────────────────────────
   return (
-    <aside className="col-2 vh-100 text-white">
+    <>
+      {/* Topbar fixa */}
+      <nav className="sidebar-topbar">
+        <img src={logo} alt="Logo" className="sidebar-topbar__logo" />
+        <button
+          onClick={() => setMenuAberto((prev) => !prev)}
+          className="sidebar-topbar__btn"
+          aria-label="Abrir menu"
+        >
+          <span className={`mdi ${menuAberto ? 'mdi-close' : 'mdi-menu'}`} />
+        </button>
+      </nav>
 
-      <img
-        src={logo}
-        alt="Logo"
-        className="img-fluid px-3 py-4"
-      />
+      {/* Overlay */}
+      {menuAberto && (
+        <div
+          className="sidebar-overlay"
+          onClick={() => setMenuAberto(false)}
+        />
+      )}
 
-      <ul className="list-unstyled px-3">
+      {/* Drawer */}
+      <aside className={`sidebar-drawer ${menuAberto ? 'sidebar-drawer--open' : ''}`}>
+        <ul className="list-unstyled px-3 pt-3">
+          {links.map(({ to, end, icon, label }) => (
+            <li key={to} className="mb-3">
+              <NavLink
+                to={to}
+                end={end}
+                onClick={() => setMenuAberto(false)}
+                className={({ isActive }) =>
+                  `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
+                }
+              >
+                <span className={`mdi ${icon} fs-5`} />
+                <span className="ms-2">{label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </aside>
 
-        <li className="mb-3">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) =>
-              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
-            }
-          >
-            <span className="mdi mdi-calendar-check fs-5"></span>
-            <span className="ms-2">Agendamentos</span>
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink
-            to="/clientes"
-            className={({ isActive }) =>
-              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
-            }
-          >
-            <span className="mdi mdi-account-multiple fs-5"></span>
-            <span className="ms-2">Clientes</span>
-          </NavLink>
-        </li>
-        <li>
-          <NavLink
-            to="/colaboradores"
-            className={({ isActive }) =>
-              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
-            }
-          >
-            <span className="mdi mdi-card-account-details-outline fs-5"></span>
-            <span className="ms-2">Colaboradores</span>
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink
-            to="/servicos"
-            className={({ isActive }) =>
-              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
-            }
-          >
-            <span className="mdi mdi-content-cut fs-5"></span>
-            <span className="ms-2">Serviços</span>
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink
-            to="/horarios"
-            className={({ isActive }) =>
-              `text-white text-decoration-none d-flex align-items-center ${isActive ? 'active' : ''}`
-            }
-          >
-            <span className="mdi mdi-clock fs-5"></span>
-            <span className="ms-2">Horários</span>
-          </NavLink>
-        </li>
-
-      </ul>
-
-    </aside>
+      {/* Espaçador para o conteúdo não ficar sob a topbar */}
+      <div className="sidebar-spacer" />
+    </>
   );
 };
 
