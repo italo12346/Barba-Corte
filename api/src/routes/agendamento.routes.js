@@ -74,7 +74,7 @@ router.post("/", async (req, res) => {
     if (agendaMin < inicioMin || agendaMin >= fimMin) {
       return res.status(400).json({
         error: true,
-        message: "Horário fora do expediente",
+        message: "Horário fora do expediente desse colaborador, por favor selecionar outro",
       });
     }
 

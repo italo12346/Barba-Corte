@@ -1,39 +1,60 @@
+import { useState } from "react";
 import { Modal } from "rsuite";
+import { useDispatch } from "react-redux";
+import types from "../../store/modules/agendamento/types";
 
-const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
+/**
+ * AgendamentoViewModal
+ *
+ * Props:
+ *  - open            : boolean
+ *  - onClose         : () => void
+ *  - agendamento     : objeto completo
+ *  - onEditar        : (agendamento) => void  — abre o FormModal em modo edição
+ */
+const AgendamentoViewModal = ({ open, onClose, agendamento, onEditar }) => {
+  const dispatch = useDispatch();
+  const [confirmandoDeletar, setConfirmandoDeletar] = useState(false);
+
   if (!agendamento) return null;
 
-  // =============================
-  // FORMATADORES
-  // =============================
-
+  // ── Formatadores ────────────────────────────────────────────────────────
   const formatarData = (data) => {
     if (!data) return "-";
-
     return new Date(data).toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
+      day:    "2-digit",
+      month:  "2-digit",
+      year:   "numeric",
+      hour:   "2-digit",
       minute: "2-digit",
     });
   };
 
   const formatarValor = (valor) => {
-    if (valor === undefined || valor === null)
-      return "Não informado";
-
+    if (valor === undefined || valor === null) return "Não informado";
     return `R$ ${Number(valor).toFixed(2)}`;
   };
 
-  // =============================
-  // RENDER
-  // =============================
+  // ── Ações ────────────────────────────────────────────────────────────────
+  const handleEditar = () => {
+    onClose();
+    onEditar(agendamento);
+  };
 
+  const handleDeletar = () => {
+    dispatch({ type: types.DELETE_AGENDAMENTO, payload: { id: agendamento._id } });
+    setConfirmandoDeletar(false);
+    onClose();
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={() => {
+        setConfirmandoDeletar(false);
+        onClose();
+      }}
       size="md"
       className="agendamento-modal"
     >
@@ -50,10 +71,7 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
 
           {/* SERVIÇO */}
           <div className="agendamento-card card-body mb-3">
-            <div className="agendamento-label">
-              Serviço
-            </div>
-
+            <div className="agendamento-label">Serviço</div>
             <div className="agendamento-value">
               {agendamento.servicoId?.titulo || "-"}
             </div>
@@ -64,10 +82,7 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
             {/* CLIENTE */}
             <div className="col-md-6 mb-3">
               <div className="agendamento-card card-body h-100">
-                <div className="agendamento-label">
-                  Cliente
-                </div>
-
+                <div className="agendamento-label">Cliente</div>
                 <div className="agendamento-value">
                   {agendamento.clienteId?.nome || "-"}
                 </div>
@@ -77,10 +92,7 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
             {/* COLABORADOR */}
             <div className="col-md-6 mb-3">
               <div className="agendamento-card card-body h-100">
-                <div className="agendamento-label">
-                  Colaborador
-                </div>
-
+                <div className="agendamento-label">Colaborador</div>
                 <div className="agendamento-value">
                   {agendamento.colaboradorId?.nome || "-"}
                 </div>
@@ -94,14 +106,9 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
             {/* DATA */}
             <div className="col-md-6 mb-3">
               <div className="agendamento-card card-body h-100">
-                <div className="agendamento-label">
-                  Data
-                </div>
-
+                <div className="agendamento-label">Data</div>
                 <div className="agendamento-value">
-                  {formatarData(
-                    agendamento.dataAgendamento
-                  )}
+                  {formatarData(agendamento.dataAgendamento)}
                 </div>
               </div>
             </div>
@@ -109,14 +116,9 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
             {/* VALOR */}
             <div className="col-md-6 mb-3">
               <div className="agendamento-card card-body h-100">
-                <div className="agendamento-label">
-                  Valor
-                </div>
-
+                <div className="agendamento-label">Valor</div>
                 <div className="agendamento-valor">
-                  {formatarValor(
-                    agendamento.valorServico
-                  )}
+                  {formatarValor(agendamento.valorServico)}
                 </div>
               </div>
             </div>
@@ -125,31 +127,80 @@ const AgendamentoViewModal = ({ open, onClose, agendamento }) => {
 
           {/* STATUS */}
           <div className="agendamento-card card-body text-center">
-            <div className="agendamento-label">
-              Status
-            </div>
-
+            <div className="agendamento-label">Status</div>
             <div className="mt-2">
-              <span
-                className={`status-badge pb-1 status-${agendamento.status}`}
-              >
-                {agendamento.status || "status-pendente"}
+              <span className={`status-badge pb-1 status-${agendamento.status}`}>
+                {agendamento.status || "pendente"}
               </span>
             </div>
           </div>
+
+          {/* CONFIRMAÇÃO DE DELEÇÃO */}
+          {confirmandoDeletar && (
+            <div className="alert alert-danger mt-3 mb-0 text-center">
+              <p className="mb-2 fw-semibold">Deseja realmente remover este agendamento?</p>
+              <div className="d-flex gap-2 justify-content-center">
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={handleDeletar}
+                >
+                  Sim, remover
+                </button>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={() => setConfirmandoDeletar(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
 
         </div>
       </Modal.Body>
 
       {/* FOOTER */}
       <Modal.Footer className="agendamento-footer">
-        <button
-          className="btn agendamento-btn w-100"
-          onClick={onClose}
-        >
-          Fechar
-        </button>
+        {!confirmandoDeletar ? (
+          <div className="row g-2 w-100">
+
+            {/* Fechar */}
+            <div className="col-4">
+              <button
+                className="btn btn-outline-secondary w-100"
+                onClick={onClose}
+              >
+                Fechar
+              </button>
+            </div>
+
+            {/* Editar */}
+            <div className="col-4">
+              <button
+                className="btn agendamento-btn w-100"
+                onClick={handleEditar}
+              >
+                Editar
+              </button>
+            </div>
+
+            {/* Deletar */}
+            <div className="col-4">
+              <button
+                className="btn btn-danger w-100"
+                onClick={() => setConfirmandoDeletar(true)}
+              >
+                Deletar
+              </button>
+            </div>
+
+          </div>
+        ) : (
+          /* Quando confirmando, footer fica vazio pois o alerta já tem os botões */
+          <div />
+        )}
       </Modal.Footer>
+
     </Modal>
   );
 };

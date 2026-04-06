@@ -1,33 +1,24 @@
-import types from './types';
+import types from "./types";
 
-// ========================= FILTER =========================
-
+// ── Filtrar ────────────────────────────────────────────────────────────────
 export const filterAgendamentos = (start, end) => ({
   type: types.FILTER_AGENDAMENTOS,
   payload: { start, end },
 });
 
-export const updateAgendamento = (agendamentos) => ({
-  type: types.UPDATE_AGENDAMENTOS,
-  payload: { agendamentos },
-});
-
-// ========================= CREATE =========================
-
-export const createAgendamento = (data) => ({
+// ── Criar ──────────────────────────────────────────────────────────────────
+export const createAgendamento = (dados) => ({
   type: types.CREATE_AGENDAMENTO,
-  payload: data,
+  payload: dados,
 });
 
-// ========================= UPDATE ONE =========================
-
-export const updateOneAgendamento = (id, data) => ({
+// ── Editar ─────────────────────────────────────────────────────────────────
+export const updateAgendamento = (id, dados) => ({
   type: types.UPDATE_AGENDAMENTO,
-  payload: { id, data },
+  payload: { id, dados },
 });
 
-// ========================= DELETE =========================
-
+// ── Deletar ────────────────────────────────────────────────────────────────
 export const deleteAgendamento = (id) => ({
   type: types.DELETE_AGENDAMENTO,
   payload: { id },
