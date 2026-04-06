@@ -9,9 +9,9 @@ import {
 } from "../../store/modules/servico/actions";
 
 import ServicoModal from "../../components/servicoModal";
-import ServicosViewModal from "../../components/servicoViewModal"; // Certifique-se de criar este componente
+import ServicosViewModal from "../../components/servicoViewModal";
 import consts from "../../consts/consts";
-import { formatarDuracao,minutosParaDate } from "../../util/functionAux";
+import { formatarDuracao, minutosParaDate } from "../../util/functionAux";
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -40,37 +40,22 @@ export default function ServicosPage() {
     }
 
     if (formTratado._id) {
-      dispatch(
-        updateServico({
-          servico: formTratado,
-          salaoId: consts.salaoId,
-        }),
-      );
+      dispatch(updateServico({ servico: formTratado, salaoId: consts.salaoId }));
     } else {
-      dispatch(
-        createServico({
-          ...formTratado,
-          salaoId: consts.salaoId,
-        }),
-      );
+      dispatch(createServico({ ...formTratado, salaoId: consts.salaoId }));
     }
 
     setOpenForm(false);
     setForm({});
   };
 
-
-const editar = (row) => {
-  setForm({
-    ...row,
-    duracao:
-      typeof row.duracao === "number"
-        ? minutosParaDate(row.duracao)
-        : null,
-  });
-
-  setOpenForm(true);
-};
+  const editar = (row) => {
+    setForm({
+      ...row,
+      duracao: typeof row.duracao === "number" ? minutosParaDate(row.duracao) : null,
+    });
+    setOpenForm(true);
+  };
 
   const remover = ({ _id }) => {
     dispatch(deleteServico({ id: _id, salaoId: consts.salaoId }));
@@ -82,14 +67,7 @@ const editar = (row) => {
         {/* Header */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h1>Serviços</h1>
-          <Button
-            className="btn"
-            size="lg"
-            onClick={() => {
-              setForm({});
-              setOpenForm(true);
-            }}
-          >
+          <Button className="btn" size="lg" onClick={() => { setForm({}); setOpenForm(true); }}>
             + Novo serviço
           </Button>
         </div>
@@ -102,78 +80,92 @@ const editar = (row) => {
             <div className="text-center py-4">Nenhum serviço encontrado.</div>
           ) : (
             <Table
-              width={"100%"}
+              width="100%"
               data={servicos || []}
               bordered
               cellBordered
               autoHeight
               hover
+              rowHeight={70} // ✅ altura fixa para comportar a imagem
             >
               {/* Título */}
-              <Column flexGrow={2}>
+              <Column flexGrow={2} minWidth={100}>
                 <HeaderCell>Serviço</HeaderCell>
                 <Cell dataKey="titulo" />
               </Column>
 
               {/* Descrição */}
-              <Column flexGrow={3}>
+              <Column flexGrow={3} minWidth={120}>
                 <HeaderCell>Descrição</HeaderCell>
                 <Cell dataKey="descricao" />
               </Column>
 
               {/* Preço */}
-              <Column flexGrow={3}>
+              <Column flexGrow={2} minWidth={90}>
                 <HeaderCell>Preço</HeaderCell>
                 <Cell>
-                  {(row) =>
-                    row.preco != null ? `R$ ${row.preco.toFixed(2)}` : "-"
-                  }
+                  {(row) => row.preco != null ? `R$ ${row.preco.toFixed(2)}` : "-"}
                 </Cell>
               </Column>
 
               {/* Duração */}
-              <Column flexGrow={2}>
+              <Column flexGrow={2} minWidth={80}>
                 <HeaderCell>Duração</HeaderCell>
                 <Cell>
-                    {(row) => formatarDuracao(row.duracao)}
+                  {(row) => formatarDuracao(row.duracao)}
                 </Cell>
               </Column>
 
-              {/* Imagem */}
-              <Column flexGrow={2}>
+              {/* ✅ Imagem — célula com padding controlado e imagem com object-fit */}
+              <Column flexGrow={2} minWidth={90}>
                 <HeaderCell>Imagem</HeaderCell>
-                <Cell>
+                <Cell style={{ padding: "6px 8px" }}>
                   {(row) => {
                     const img = row.arquivos?.[0];
                     return img ? (
-                      <a
-                        href={`${img.caminhoArquivo}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                      <a href={img.caminhoArquivo} target="_blank" rel="noreferrer">
                         <img
-                          src={`${img.caminhoArquivo}`}
+                          src={img.caminhoArquivo}
                           alt={img.nome}
-                          style={{ width: 80, borderRadius: 4 }}
+                          style={{
+                            width: 52,
+                            height: 52,
+                            objectFit: "cover",   // ✅ corta sem distorcer
+                            borderRadius: 6,
+                            display: "block",
+                          }}
                         />
                       </a>
-                    ) : null;
+                    ) : (
+                      <div
+                        style={{
+                          width: 52,
+                          height: 52,
+                          borderRadius: 6,
+                          background: "#eee",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 20,
+                          color: "#aaa",
+                        }}
+                      >
+                        <span className="mdi mdi-image-off" />
+                      </div>
+                    );
                   }}
                 </Cell>
               </Column>
 
               {/* Ações */}
-              <Column flexGrow={2}>
+              <Column flexGrow={2} minWidth={120}>
                 <HeaderCell>Ações</HeaderCell>
                 <Cell>
                   {(row) => (
                     <div className="actions d-flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() => {
-                          setServicoSelecionado(row);
-                          setModalViewOpen(true);
-                        }}
+                        onClick={() => { setServicoSelecionado(row); setModalViewOpen(true); }}
                       >
                         <span className="mdi mdi-eye" title="Visualizar" />
                       </Button>
@@ -182,16 +174,8 @@ const editar = (row) => {
                         <span className="mdi mdi-pencil" title="Editar" />
                       </Button>
 
-                      <Button
-                        appearance="subtle"
-                        size="sm"
-                        color="red"
-                        onClick={() => remover(row)}
-                      >
-                        <span
-                          className="mdi mdi-trash-can-outline"
-                          title="Remover"
-                        />
+                      <Button appearance="subtle" size="sm" color="red" onClick={() => remover(row)}>
+                        <span className="mdi mdi-trash-can-outline" title="Remover" />
                       </Button>
                     </div>
                   )}

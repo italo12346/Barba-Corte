@@ -36,7 +36,6 @@ function* createServico({ payload }) {
   try {
     const formData = new FormData();
 
-    // 🔥 ADICIONE ISSO
     formData.append("salaoId", payload.salaoId);
 
     formData.append(
@@ -52,18 +51,11 @@ function* createServico({ payload }) {
       })
     );
 
-    if (payload.arquivos?.length) {
-      payload.arquivos.forEach((file, idx) => {
-        formData.append(`arquivo_${idx + 1}`, file.blobFile);
-      });
+    // ✅ usa novaImagem (File direto) igual ao update
+    if (payload.novaImagem) {
+      formData.append("file", payload.novaImagem);
     }
 
-    console.log("📦 Enviando FormData:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
-    // 🚨 NÃO DEFINA Content-Type MANUALMENTE
     yield call(api.post, "/servicos/upload", formData);
 
     yield put({ type: types.CREATE_SERVICO_SUCCESS });
@@ -75,7 +67,6 @@ function* createServico({ payload }) {
 
   } catch (err) {
     console.error("❌ CREATE_SERVICO error:", err.response?.data || err);
-
     yield put({
       type: types.CREATE_SERVICO_FAILURE,
       error: err.response?.data || err,
