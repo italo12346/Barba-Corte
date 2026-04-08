@@ -51,7 +51,7 @@ const handleFileChange = (fileList) => {
         <Form fluid>
           {/* Título */}
           <Form.Group>
-            <Form.ControlLabel>Nome do serviço</Form.ControlLabel>
+            <Form.Label>Nome do serviço</Form.Label>
             <Form.Control
               name="titulo"
               value={form.titulo || ""}
@@ -61,7 +61,7 @@ const handleFileChange = (fileList) => {
 
           {/* Descrição */}
           <Form.Group>
-            <Form.ControlLabel>Descrição</Form.ControlLabel>
+            <Form.Label>Descrição</Form.Label>
             <Form.Control
               name="descricao"
               accepter={Input}
@@ -74,7 +74,7 @@ const handleFileChange = (fileList) => {
 
           {/* Preço */}
           <Form.Group>
-            <Form.ControlLabel>Preço</Form.ControlLabel>
+            <Form.Label>Preço</Form.Label>
             <Form.Control
               name="preco"
               accepter={InputNumber}
@@ -92,7 +92,7 @@ const handleFileChange = (fileList) => {
 
           {/* Comissão */}
           <Form.Group>
-            <Form.ControlLabel>Comissão (%)</Form.ControlLabel>
+            <Form.Label>Comissão (%)</Form.Label>
             <Form.Control
               name="comissao"
               accepter={InputNumber}
@@ -109,7 +109,7 @@ const handleFileChange = (fileList) => {
 
           {/* Duração */}
           <Form.Group>
-            <Form.ControlLabel>Duração</Form.ControlLabel>
+            <Form.Label>Duração</Form.Label>
             <Form.Control
               name="duracao"
               accepter={TimePicker}
@@ -123,9 +123,9 @@ const handleFileChange = (fileList) => {
           <div className="d-flex text-center w-100 overflow-hidden">
             {/* Status */}
             <Form.Group>
-              <Form.ControlLabel className="d-flex w-100 justify-content-center">
+              <Form.Label className="d-flex w-100 justify-content-center">
                 Status
-              </Form.ControlLabel>
+              </Form.Label>
               <Form.Control
                 name="status"
                 accepter={SelectPicker}
@@ -137,9 +137,9 @@ const handleFileChange = (fileList) => {
 
             {/* Recorrência */}
             <Form.Group>
-              <Form.ControlLabel className="d-flex w-100 justify-content-center">
+              <Form.Label className="d-flex w-100 justify-content-center">
                 Recorrência
-              </Form.ControlLabel>
+              </Form.Label>
               <Form.Control
                 name="recorrencia"
                 accepter={SelectPicker}
@@ -152,9 +152,9 @@ const handleFileChange = (fileList) => {
 
             {/* Upload de imagens */}
             <Form.Group>
-              <Form.ControlLabel className="d-flex w-100 justify-content-center">
+              <Form.Label className="d-flex w-100 justify-content-center">
                 Imagens
-              </Form.ControlLabel>
+              </Form.Label>
               <Uploader
                 autoUpload={false}
                 multiple

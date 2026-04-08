@@ -29,7 +29,8 @@ router.post("/", async (req, res) => {
   try {
     await session.startTransaction();
 
-    const { colaborador, salaoId } = req.body;
+    const { colaborador } = req.body;
+    const salaoId = req.salaoId;
 
     if (!colaborador || !salaoId) {
       throw new Error("Dados inválidos: colaborador ou salaoId ausente");
@@ -152,14 +153,9 @@ router.post("/filter", async (req, res) => {
 LISTAR POR SALÃO
 ========================
 */
-/*
-========================
-LISTAR POR SALÃO
-========================
-*/
-router.get("/salao/:salaoId", async (req, res) => {
+router.get("/salao/", async (req, res) => {
   try {
-    const { salaoId } = req.params;
+    const salaoId = req.salaoId;
 
     // Busca vínculos ativos
     const vinculos = await SalaoColaborador.find({

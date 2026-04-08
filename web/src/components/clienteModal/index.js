@@ -1,155 +1,283 @@
-import { Modal } from "rsuite";
-import { formatarTelefone,formatarData} from "../../util/functionAux";
+import { Modal, Button, Form, DatePicker, SelectPicker } from "rsuite";
+import { useEffect, useMemo } from "react";
+import { formatarTelefone } from "../../util/functionAux";
 
-const ClienteModal = ({
-  open,
-  onClose,
-  cliente,
-  agendamentos = [],
-  loading = false,
-}) => {
-  if (!cliente) return null;
+export default function ClienteModal({ open, onClose, form, setForm, salvar }) {
+  const initialState = useMemo(() => ({
+    nome: "",
+    email: "",
+    telefone: "",
+    dataNascimento: null,
+    sexo: "",
+    senha: "",
+    fotoFile: null,
+    fotoPreview: null,
+    documento: {
+      numero: "",
+      tipo: "CPF",
+    },
+  }), []);
 
 
+  useEffect(() => {
+    if (!open) return;
 
-  // =========================
-  // BADGE STATUS DINÂMICO
-  // =========================
-  const getStatusBadge = (status) => {
-    const map = {
-      confirmado: "bg-success",
-      pendente: "bg-warning text-dark",
-      cancelado: "bg-danger",
-      concluido: "bg-primary",
-    };
+    if (!form?._id) {
+      setForm(initialState);
+    }
+  }, [open, form?._id, setForm, initialState]);
 
-    return map[status] || "bg-secondary";
+  const handleChange = (value, name) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  /* =========================
+     MÁSCARA CPF / CNPJ
+  ========================= */
+  const formatDocumento = (value, tipo) => {
+    value = value.replace(/\D/g, "");
+
+    if (tipo === "CPF") {
+      return value
+        .slice(0, 11)
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d)/, "$1.$2")
+        .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    }
+
+    if (tipo === "CNPJ") {
+      return value
+        .slice(0, 14)
+        .replace(/^(\d{2})(\d)/, "$1.$2")
+        .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1/$2")
+        .replace(/(\d{4})(\d)/, "$1-$2");
+    }
+
+    return value;
+  };
+
+  /* =========================
+     UPLOAD FOTO
+  ========================= */
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const preview = URL.createObjectURL(file);
+
+    setForm((prev) => ({
+      ...prev,
+      fotoFile: file,
+      fotoPreview: preview,
+    }));
+  };
+
+  const handleClose = () => {
+    setForm(initialState);
+    onClose();
   };
 
   return (
-    <Modal open={open} onClose={onClose} size="lg">
-      <Modal.Header>
+    <Modal size="sm" open={open} onClose={handleClose}>
+      <Modal.Header className="modalHeader">
         <Modal.Title>
-          <div className="d-flex align-items-center gap-3">
-            <div
-              className="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center"
-              style={{ width: 50, height: 50, fontSize: 20 }}
-            >
-              {cliente.nome?.charAt(0)}
-            </div>
-
-            <div>
-              <h5 className="mb-0">{cliente.nome}</h5>
-              <small className="text-muted">{cliente.email}</small>
-            </div>
-          </div>
+          {form?._id ? "Editar Cliente" : "Novo Cliente"}
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body>
-        {loading && (
-          <div className="text-center py-4">
-            <div className="spinner-border text-dark" />
-          </div>
-        )}
-
-        {!loading && (
-          <div className="container-fluid">
-            {/* =========================
-               DADOS DO CLIENTE
-            ========================== */}
-            <div className="card shadow-sm mb-4">
-              <div className="card-header text-white">
-                Dados do Cliente
-              </div>
-
-              <div className="card-body row g-3">
-                <Info
-                  label="Telefone"
-                  value={formatarTelefone(cliente.telefone)}
+      <Modal.Body style={{ padding: 25 }}>
+        <Form fluid>
+          {/* FOTO */}
+          <Form.Group style={{ textAlign: "center", marginBottom: 25 }}>
+            <div
+              style={{
+                width: 90,
+                height: 90,
+                borderRadius: "50%",
+                background: "#f3f3f3",
+                margin: "0 auto 10px",
+                overflow: "hidden",
+                border: "2px solid #e5e5e5",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              onClick={() => document.getElementById("fileInput").click()}
+            >
+              {form?.fotoPreview ? (
+                <img
+                  src={form.fotoPreview}
+                  alt="preview"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
                 />
-                <Info label="Sexo" value={cliente.sexo} />
-                <Info
-                  label="Nascimento"
-                  value={formatarData(cliente.dataNascimento)}
-                />
-                <Info label="Documento" value={cliente.documento?.numero} />
-                <Info label="Cidade" value={cliente.endereco?.cidade} />
-              </div>
+              ) : (
+                <span style={{ fontSize: 12, color: "#999" }}>Upload</span>
+              )}
             </div>
 
-            {/* =========================
-               HISTÓRICO DE AGENDAMENTOS
-            ========================== */}
-            <div className="card shadow-sm">
-              <div className="card-header bg-dark text-white">
-                Histórico de Agendamentos
-              </div>
+            <input
+              id="fileInput"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+          </Form.Group>
 
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Serviço</th>
-                      <th>Colaborador</th>
-                      <th>Data</th>
-                      <th>Valor</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
+          {/* GRID DO FORM */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 15,
+            }}
+          >
+            {/* NOME */}
+            <Form.Group style={{ gridColumn: "1 / -1" }}>
+              <Form.Label>Nome</Form.Label>
+              <Form.Control
+                value={form?.nome || ""}
+                onChange={(v) => handleChange(v, "nome")}
+              />
+            </Form.Group>
 
-                  <tbody>
-                    {agendamentos.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="text-center py-3">
-                          Nenhum agendamento encontrado
-                        </td>
-                      </tr>
-                    )}
+            {/* EMAIL */}
+            <Form.Group style={{ gridColumn: "1 / -1" }}>
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                value={form?.email || ""}
+                onChange={(v) => handleChange(v, "email")}
+              />
+            </Form.Group>
 
-                    {agendamentos.map((a) => (
-                      <tr key={a._id}>
-                        <td>{a.servico || "-"}</td>
-                        <td>{a.colaborador || "-"}</td>
-                        <td>{formatarData(a.data)}</td>
-                        <td>
-                          {a.valor
-                            ? `R$ ${Number(a.valor).toFixed(2)}`
-                            : "-"}
-                        </td>
-                        <td>
-                          <span className={`badge ${getStatusBadge(a.status)}`}>
-                            {a.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            {/* TELEFONE */}
+            <Form.Group>
+              <Form.Label>Telefone</Form.Label>
+              <Form.Control
+                value={formatarTelefone(form?.telefone || "")}
+                onChange={(v) => {
+                  const onlyNumbers = v.replace(/\D/g, "");
+                  if (onlyNumbers.length <= 11) {
+                    handleChange(onlyNumbers, "telefone");
+                  }
+                }}
+              />
+            </Form.Group>
+
+            {/* SEXO */}
+            <Form.Group>
+              <Form.Label>Sexo</Form.Label>
+              <SelectPicker
+                style={{ width: "100%" }}
+                data={[
+                  { label: "Masculino", value: "M" },
+                  { label: "Feminino", value: "F" },
+                  { label: "Outro", value: "O" },
+                ]}
+                value={form?.sexo || null}
+                onChange={(v) => handleChange(v, "sexo")}
+              />
+            </Form.Group>
+
+            {/* DATA NASCIMENTO */}
+            <Form.Group>
+              <Form.Label>Nascimento</Form.Label>
+              <DatePicker
+                style={{ width: "100%" }}
+                format="dd/MM/yyyy"
+                oneTap
+                value={
+                  form?.dataNascimento ? new Date(form.dataNascimento) : null
+                }
+                onChange={(v) =>
+                  handleChange(v ? v.toISOString() : null, "dataNascimento")
+                }
+              />
+            </Form.Group>
+
+            {/* SENHA */}
+            <Form.Group>
+              <Form.Label>Senha</Form.Label>
+              <Form.Control
+                type="password"
+                value={form?.senha || ""}
+                onChange={(v) => handleChange(v, "senha")}
+              />
+            </Form.Group>
+
+            {/* TIPO DOCUMENTO */}
+            <Form.Group>
+              <Form.Label>Tipo</Form.Label>
+              <SelectPicker
+                style={{ width: "100%" }}
+                data={[
+                  { label: "CPF", value: "CPF" },
+                  { label: "CNPJ", value: "CNPJ" },
+                ]}
+                value={form?.documento?.tipo || "CPF"}
+                onChange={(tipo) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    documento: {
+                      tipo,
+                      numero: "",
+                    },
+                  }))
+                }
+                cleanable={false}
+              />
+            </Form.Group>
+
+            {/* NUMERO DOCUMENTO */}
+            <Form.Group>
+              <Form.Label>Número</Form.Label>
+              <Form.Control
+                value={formatDocumento(
+                  form?.documento?.numero || "",
+                  form?.documento?.tipo || "CPF",
+                )}
+                onChange={(v) => {
+                  const onlyNumbers = v.replace(/\D/g, "");
+
+                  const maxLength = form?.documento?.tipo === "CPF" ? 11 : 14;
+
+                  if (onlyNumbers.length <= maxLength) {
+                    setForm((prev) => ({
+                      ...prev,
+                      documento: {
+                        ...prev.documento,
+                        numero: onlyNumbers,
+                      },
+                    }));
+                  }
+                }}
+                placeholder={
+                  form?.documento?.tipo === "CPF"
+                    ? "000.000.000-00"
+                    : "00.000.000/0000-00"
+                }
+              />
+            </Form.Group>
           </div>
-        )}
+        </Form>
       </Modal.Body>
 
       <Modal.Footer>
-        <button className="btn btn-ha" onClick={onClose}>
-          Fechar
-        </button>
+        <Button appearance="subtle" onClick={handleClose}>
+          Cancelar
+        </Button>
+
+        <Button className="btn" onClick={salvar}>
+          Salvar Cliente
+        </Button>
       </Modal.Footer>
     </Modal>
   );
-};
-
-export default ClienteModal;
-
-/* =========================
-   COMPONENTE AUXILIAR
-========================= */
-
-const Info = ({ label, value }) => (
-  <div className="col-md-4">
-    <small className="text-muted">{label}</small>
-    <div className="fw-semibold">{value || "-"}</div>
-  </div>
-);
+}

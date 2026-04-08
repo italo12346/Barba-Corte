@@ -1,30 +1,71 @@
 import types from "./types";
-import {produce} from "immer";
 
-const INITIAL = {
+const initialState = {
   agendamentos: [],
+  loading: false,
+  error: null,
+  success: false,
 };
 
-export default function reducer(state = INITIAL, action) {
-  console.log("ACTION:", action.type);
-
+const agendamentoReducer = (state = initialState, action) => {
   switch (action.type) {
+    // ── Loading genérico ──────────────────────────────────────────────────
+    case types.FILTER_AGENDAMENTOS:
+    case types.CREATE_AGENDAMENTO:
+    case types.UPDATE_AGENDAMENTO:
+    case types.DELETE_AGENDAMENTO:
+      return { ...state, loading: true, error: null, success: false };
 
-    case types.UPDATE_AGENDAMENTOS: {
-      return produce(state, draft => {
-        draft.agendamentos = action.payload.agendamentos;
-      });
-    }
+    // ── Filtrar ───────────────────────────────────────────────────────────
+    case types.FILTER_AGENDAMENTOS_SUCCESS:
+      // payload já chega como array limpo (extraído na saga)
+      return { ...state, loading: false, agendamentos: action.payload };
 
-    case types.FILTER_AGENDAMENTOS_SUCCESS: {
-      const eventos = action.payload.agendamentos || [];
+    // ── Criar ─────────────────────────────────────────────────────────────
+    case types.CREATE_AGENDAMENTO_SUCCESS:
+      // payload = agendamento recém-criado (objeto único)
+      return {
+        ...state,
+        loading: false,
+        success: true,
+        agendamentos: [...state.agendamentos, action.payload],
+      };
+    case types.RESET_SUCCESS:
+      return { ...state, success: false, error: null };
+    // ── Editar ────────────────────────────────────────────────────────────
+    case types.UPDATE_AGENDAMENTO_SUCCESS:
+      // payload = agendamento atualizado e populado (objeto único)
+      return {
+        ...state,
+        loading: false,
+        success: true,
+        agendamentos: state.agendamentos.map((a) =>
+          a._id === action.payload._id ? action.payload : a,
+        ),
+      };
 
-      return produce(state, draft => {
-        draft.agendamentos = eventos;
-      });
-    }
+    // ── Deletar ───────────────────────────────────────────────────────────
+    case types.DELETE_AGENDAMENTO_SUCCESS:
+      // payload = { id }
+      return {
+        ...state,
+        loading: false,
+        success: true,
+        agendamentos: state.agendamentos.filter(
+          (a) => a._id !== action.payload.id,
+        ),
+      };
+
+    // ── Erros ─────────────────────────────────────────────────────────────
+    case types.FILTER_AGENDAMENTOS_FAILURE:
+    case types.CREATE_AGENDAMENTO_FAILURE:
+    case types.UPDATE_AGENDAMENTO_FAILURE:
+    case types.DELETE_AGENDAMENTO_FAILURE:
+      return { ...state, loading: false, error: action.payload };
 
     default:
       return state;
   }
-}
+};
+
+export default agendamentoReducer;

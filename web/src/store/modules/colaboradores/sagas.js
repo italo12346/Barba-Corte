@@ -5,30 +5,15 @@ import types from "./types";
 /* =====================================================
    LISTAR COLABORADORES
 ===================================================== */
-function* listColaboradores({ payload: salaoId }) {
+function* listColaboradores() {
   try {
-    const response = yield call(api.get, `/colaborador/salao/${salaoId}`);
-
-    const { data } = response;
-console.log({data});
-
-    // Se for array, mostrar item por item
-    if (Array.isArray(data)) {
-      console.log("=== LISTA ITEM POR ITEM ===");
-      data.forEach((item, index) => {
-        console.log(`Item ${index}:`, item);
-      });
-    }
-
-    console.log("======================================");
+    const { data } = yield call(api.get, `/colaborador/salao/`);
 
     yield put({
       type: types.LIST_COLABORADORES_SUCCESS,
       payload: data.colaboradores,
     });
   } catch (err) {
-    console.error("Erro ao listar colaboradores:", err);
-
     yield put({
       type: types.LIST_COLABORADORES_FAILURE,
       error: err,
@@ -41,28 +26,26 @@ console.log({data});
 ===================================================== */
 function* createColaborador({ payload }) {
   try {
-    const { salaoId, fotoFile, ...data } = payload;
+    const { fotoFile, ...colaborador } = payload; // ✅ sem salaoId
 
-    if (!salaoId) {
-      throw new Error("salaoId obrigatório");
-    }
+    const { data } = yield call(api.post, "/colaborador", { colaborador }); // ✅ sem salaoId no body
 
-    const formData = new FormData();
-    formData.append("salaoId", salaoId);
-    formData.append("colaborador", JSON.stringify(data));
-
-    if (fotoFile) {
+    if (fotoFile && data.colaboradorId) {
+      const formData = new FormData();
+      formData.append("colaboradorId", data.colaboradorId);
       formData.append("file", fotoFile);
+
+      yield call(api.post, "/colaborador/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
     }
-
-    yield call(api.post, "/colaborador/upload", formData);
-
-    yield put({ type: types.CREATE_COLABORADOR_SUCCESS });
 
     yield put({
-      type: types.LIST_COLABORADORES_REQUEST,
-      payload: salaoId,
+      type: types.CREATE_COLABORADOR_SUCCESS,
+      payload: data,
     });
+
+    yield put({ type: types.LIST_COLABORADORES_REQUEST });
 
   } catch (err) {
     yield put({
@@ -77,7 +60,7 @@ function* createColaborador({ payload }) {
 ===================================================== */
 function* updateColaborador({ payload }) {
   try {
-    const { colaborador, salaoId } = payload;
+    const { colaborador } = payload;
 
     if (!colaborador?._id) {
       throw new Error("Colaborador inválido");
@@ -85,14 +68,8 @@ function* updateColaborador({ payload }) {
 
     const { _id, fotoFile, ...data } = colaborador;
 
-    // =========================
-    // Atualiza dados base
-    // =========================
     yield call(api.put, `/colaborador/${_id}`, data);
 
-    // =========================
-    // Se tiver nova foto → upload separado
-    // =========================
     if (fotoFile) {
       const formData = new FormData();
       formData.append("colaboradorId", _id);
@@ -102,11 +79,7 @@ function* updateColaborador({ payload }) {
     }
 
     yield put({ type: types.UPDATE_COLABORADOR_SUCCESS });
-
-    yield put({
-      type: types.LIST_COLABORADORES_REQUEST,
-      payload: salaoId,
-    });
+    yield put({ type: types.LIST_COLABORADORES_REQUEST }); // ✅ sem salaoId
 
   } catch (err) {
     yield put({
@@ -116,29 +89,19 @@ function* updateColaborador({ payload }) {
   }
 }
 
-
 /* =====================================================
    REMOVER COLABORADOR
 ===================================================== */
 function* unlikeColaborador({ payload }) {
   try {
-    const { id, salaoId } = payload;
+    const { id } = payload; // ✅ sem salaoId
 
     yield call(api.delete, `/colaborador/vinculo/${id}`);
 
-    yield put({
-      type: types.UNLIKE_COLABORADOR_SUCCESS,
-    });
+    yield put({ type: types.UNLIKE_COLABORADOR_SUCCESS });
+    yield put({ type: types.LIST_COLABORADORES_REQUEST }); // ✅ sem salaoId
 
-    if (salaoId) {
-      yield put({
-        type: types.LIST_COLABORADORES_REQUEST,
-        payload: salaoId,
-      });
-    }
   } catch (err) {
-    console.error("Erro ao remover colaborador:", err);
-
     yield put({
       type: types.UNLIKE_COLABORADOR_FAILURE,
       error: err,
@@ -147,18 +110,15 @@ function* unlikeColaborador({ payload }) {
 }
 
 /* =====================================================
-   LISTAR SERVIÇOS
+   LISTAR SERVIÇOS (para o select de especialidades)
 ===================================================== */
-function* listServicos({ payload: salaoId }) {
+function* listServicos() {
   try {
-    const { data } = yield call(
-      api.get,
-      `/salao/servico/${salaoId}`
-    );
+    const { data } = yield call(api.get, `/servicos/servico/`); // ✅ sem salaoId na URL
 
     yield put({
       type: types.LIST_SERVICOS_SUCCESS,
-      payload: data.servicos, // ajuste se necessário
+      payload: data.servicos,
     });
 
   } catch (err) {
@@ -169,14 +129,16 @@ function* listServicos({ payload: salaoId }) {
   }
 }
 
+/* =====================================================
+   CARREGAR SERVIÇOS DO COLABORADOR
+===================================================== */
 function* loadServicosColaborador({ payload }) {
   try {
-    // payload = array de IDs de serviços
     const servicosData = {};
 
     for (const id of payload) {
       const response = yield call(api.get, `/servicos/${id}`);
-      servicosData[id] = response.data.servico; // pegando objeto completo do serviço
+      servicosData[id] = response.data.servico;
     }
 
     yield put({
@@ -184,7 +146,6 @@ function* loadServicosColaborador({ payload }) {
       payload: servicosData,
     });
   } catch (err) {
-    console.error("Erro ao carregar serviços do colaborador:", err);
     yield put({
       type: types.LOAD_SERVICOS_COLABORADOR_FAILURE,
       error: err,
@@ -197,15 +158,11 @@ function* loadServicosColaborador({ payload }) {
 ===================================================== */
 export default function* colaboradorSaga() {
   yield all([
-    takeLatest(types.LIST_COLABORADORES_REQUEST, listColaboradores),
-
-    takeLatest(types.CREATE_COLABORADOR_REQUEST, createColaborador),
-
-    takeLatest(types.UPDATE_COLABORADOR_REQUEST, updateColaborador),
-
-    takeLatest(types.UNLIKE_COLABORADOR_REQUEST, unlikeColaborador),
-
-    takeLatest(types.LIST_SERVICOS_REQUEST, listServicos),
+    takeLatest(types.LIST_COLABORADORES_REQUEST,        listColaboradores),
+    takeLatest(types.CREATE_COLABORADOR_REQUEST,        createColaborador),
+    takeLatest(types.UPDATE_COLABORADOR_REQUEST,        updateColaborador),
+    takeLatest(types.UNLIKE_COLABORADOR_REQUEST,        unlikeColaborador),
+    takeLatest(types.LIST_SERVICOS_REQUEST,             listServicos),
     takeLatest(types.LOAD_SERVICOS_COLABORADOR_REQUEST, loadServicosColaborador),
   ]);
 }

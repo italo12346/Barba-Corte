@@ -1,38 +1,39 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const arquivoSchema = new mongoose.Schema({
+const arquivoSchema = new mongoose.Schema(
+  {
     referenciaId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: 'model'
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: "model",
     },
-    model:{
-        type: String,
-        required: true,
-        enum: ['Salao','Servico','Colaborador']
+    model: {
+      type: String,
+      required: true,
+      enum: ["Salao", "Servico", "Colaborador", "Cliente"],
     },
     nome: {
-        type: String,
-        required: true,
-        trim: true
+      type: String,
+      required: true,
+      trim: true,
     },
     descricao: {
-        type: String,
-        trim: true
+      type: String,
+      trim: true,
     },
     caminhoArquivo: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     tipoMime: {
-        type: String,
-        required: false
+      type: String,
+      required: false,
     },
     tamanho: {
-        type: Number,
-        required: false
+      type: Number,
+      required: false,
     },
-},
-{ timestamps: true }
+  },
+  { timestamps: true },
 );
-module.exports = mongoose.model('Arquivo', arquivoSchema);
+module.exports = mongoose.model("Arquivo", arquivoSchema);

@@ -38,26 +38,27 @@ export default function ColaboradorModal({
   // ===============================
   // Inicialização controlada
   // ===============================
-  useEffect(() => {
-    if (!open) return;
+useEffect(() => {
+  if (!open) return;
 
-    if (!form?._id) {
-      setForm({
-        nome: "",
-        email: "",
-        telefone: "",
-        status: "A",
-        dataNascimento: null,
-        sexo: "",
-        especialidades: [],
-        fotoFile: null,
-      });
-    }
+  // inicializa form só quando criar
+  if (!form?._id) {
+    setForm({
+      nome: "",
+      email: "",
+      telefone: "",
+      status: "A",
+      dataNascimento: null,
+      sexo: "",
+      especialidades: [],
+      fotoFile: null,
+    });
+  }
 
-    if (salaoId) {
-      dispatch(allServicos(salaoId));
-    }
-  }, [open, salaoId]);
+  // 🔥 sempre busca serviços ao abrir
+  dispatch(allServicos());
+
+}, [open, dispatch, setForm, form?._id]);
 
   // ===============================
   // Change handler seguro
@@ -88,7 +89,7 @@ export default function ColaboradorModal({
 
   return (
     <Modal size="md" open={open} onClose={handleClose}>
-      <Modal.Header>
+      <Modal.Header className="modalHeader">
         <Modal.Title>
           {form._id ? "Editar colaborador" : "Novo colaborador"}
         </Modal.Title>
@@ -99,7 +100,7 @@ export default function ColaboradorModal({
 
           {/* FOTO */}
           <Form.Group>
-            <Form.ControlLabel>Foto</Form.ControlLabel>
+            <Form.Label>Foto</Form.Label>
             <Uploader
               autoUpload={false}
               fileListVisible
@@ -110,7 +111,7 @@ export default function ColaboradorModal({
           </Form.Group>
 
           <Form.Group>
-            <Form.ControlLabel>Nome</Form.ControlLabel>
+            <Form.Label>Nome</Form.Label>
             <Form.Control
               value={form.nome || ""}
               onChange={(v) => handleChange(v, "nome")}
@@ -118,7 +119,7 @@ export default function ColaboradorModal({
           </Form.Group>
 
           <Form.Group>
-            <Form.ControlLabel>Email</Form.ControlLabel>
+            <Form.Label>Email</Form.Label>
             <Form.Control
               type="email"
               value={form.email || ""}
@@ -127,7 +128,7 @@ export default function ColaboradorModal({
           </Form.Group>
 
           <Form.Group>
-            <Form.ControlLabel>Telefone</Form.ControlLabel>
+            <Form.Label>Telefone</Form.Label>
             <Form.Control
               value={formatarTelefone(form.telefone)}
               onChange={(v) => {
@@ -140,7 +141,7 @@ export default function ColaboradorModal({
           </Form.Group>
 
           <Form.Group>
-            <Form.ControlLabel>Data de Nascimento</Form.ControlLabel>
+            <Form.Label>Data de Nascimento</Form.Label>
             <DatePicker
               style={{ width: "100%" }}
               format="dd/MM/yyyy"
@@ -162,7 +163,7 @@ export default function ColaboradorModal({
           <div className="d-flex gap-3">
 
             <Form.Group style={{ flex: 1 }}>
-              <Form.ControlLabel>Sexo</Form.ControlLabel>
+              <Form.Label>Sexo</Form.Label>
               <SelectPicker
                 style={{ width: "100%" }}
                 data={[
@@ -177,7 +178,7 @@ export default function ColaboradorModal({
             </Form.Group>
 
             <Form.Group style={{ flex: 1 }}>
-              <Form.ControlLabel>Especialidades</Form.ControlLabel>
+              <Form.Label>Especialidades</Form.Label>
               <CheckPicker
                 style={{ width: "100%" }}
                 data={especialidadesData}
@@ -192,7 +193,7 @@ export default function ColaboradorModal({
       </Modal.Body>
 
       <Modal.Footer>
-        <Button appearance="primary" onClick={salvar}>
+        <Button className="btn" onClick={salvar}>
           Salvar
         </Button>
 
