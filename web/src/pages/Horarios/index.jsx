@@ -28,7 +28,6 @@ import {
   setCalendarView,
 } from "../../store/modules/horario/actions";
 import { allColaboradores } from "../../store/modules/colaboradores/actions";
-import consts from "../../consts/consts";
 
 moment.locale("pt-br");
 const localizer = momentLocalizer(moment);
@@ -101,8 +100,8 @@ const eventos = useMemo(() => {
 
   // ── Load inicial ─────────────────────────────────────────────────────────
   useEffect(() => {
-    dispatch(allColaboradores(consts.salaoId));
-    dispatch(allHorarios(consts.salaoId));
+    dispatch(allColaboradores());
+    dispatch(allHorarios());
   }, [dispatch]);
 
   // ── Exibe erro via toast ──────────────────────────────────────────────────
@@ -180,7 +179,6 @@ const eventos = useMemo(() => {
     const isEdicao = Boolean(horarioId);
 
     const payload = {
-      salaoId: consts.salaoId,
       colaboradorId,
       diasSemana,
       horaInicio,
