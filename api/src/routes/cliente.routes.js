@@ -22,7 +22,8 @@ router.post("/", async (req, res) => {
   try {
     session.startTransaction();
 
-    const { cliente, salaoId } = req.body;
+    const { cliente } = req.body;
+    const salaoId = req.salaoId;
 
     if (!cliente || !salaoId) {
       throw new Error("Dados incompletos");
@@ -68,7 +69,6 @@ router.post("/", async (req, res) => {
       error: false,
       clienteId,
     });
-
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
@@ -93,7 +93,6 @@ router.post("/filter", async (req, res) => {
       error: false,
       clientes,
     });
-
   } catch (err) {
     res.status(400).json({
       error: true,
@@ -107,9 +106,9 @@ router.post("/filter", async (req, res) => {
 LISTAR CLIENTES DO SALÃO
 ========================================
 */
-router.get("/:salaoId", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const { salaoId } = req.params;
+    const salaoId = req.salaoId;
 
     const clientes = await SalaoCliente.find({
       salaoId,
@@ -130,7 +129,6 @@ router.get("/:salaoId", async (req, res) => {
       error: false,
       clientes: resultado,
     });
-
   } catch (err) {
     res.status(400).json({
       error: true,
@@ -146,7 +144,10 @@ INATIVAR VÍNCULO
 */
 router.delete("/vinculo/:id", async (req, res) => {
   try {
-    const vinculo = await SalaoCliente.findById(req.params.id);
+    const vinculo = await SalaoCliente.findOne({
+      _id: req.params.id,
+      salaoId: req.salaoId,
+    });
 
     if (!vinculo) {
       throw new Error("Vínculo não encontrado");
@@ -156,7 +157,6 @@ router.delete("/vinculo/:id", async (req, res) => {
     await vinculo.save();
 
     res.json({ error: false });
-
   } catch (err) {
     res.status(400).json({
       error: true,
@@ -170,14 +170,9 @@ router.delete("/vinculo/:id", async (req, res) => {
 UPLOAD FOTO CLIENTE (CREATE + UPDATE)
 ========================================
 */
-/*
-========================================
-UPLOAD FOTO CLIENTE (CREATE + UPDATE)
-========================================
-*/
+
 router.post("/upload", async (req, res) => {
   try {
-
     if (!req.headers["content-type"]?.includes("multipart/form-data")) {
       return res.status(400).json({
         error: true,
@@ -205,7 +200,6 @@ router.post("/upload", async (req, res) => {
     ========================================
     */
     busboy.on("file", (fieldname, file, info) => {
-
       const { filename, mimeType } = info;
 
       if (!filename) {
@@ -214,7 +208,6 @@ router.post("/upload", async (req, res) => {
       }
 
       const promise = new Promise((resolve, reject) => {
-
         const chunks = [];
         let tamanho = 0;
 
@@ -233,7 +226,6 @@ router.post("/upload", async (req, res) => {
         });
 
         file.on("error", reject);
-
       });
 
       filePromises.push(promise);
@@ -245,10 +237,10 @@ router.post("/upload", async (req, res) => {
     ========================================
     */
     busboy.on("finish", async () => {
-
       try {
-
-        let { clienteId, cliente, salaoId } = fields;
+        let { clienteId, cliente } = fields;
+        const salaoId = req.salaoId;
+        fields;
 
         console.log("FIELDS:", fields);
 
@@ -266,7 +258,6 @@ router.post("/upload", async (req, res) => {
         ========================================
         */
         if (!clienteId) {
-
           if (!cliente || !salaoId) {
             throw new Error("Dados insuficientes para criação");
           }
@@ -281,30 +272,23 @@ router.post("/upload", async (req, res) => {
             clienteId: clienteDoc._id,
             status: "A",
           });
-
-        }
-
-        /*
+        } else {
+          /*
         ========================================
         UPDATE
         ========================================
         */
-        else {
-
           if (!mongoose.Types.ObjectId.isValid(clienteId)) {
             throw new Error("ID inválido");
           }
 
-          clienteDoc = await Cliente.findByIdAndUpdate(
-            clienteId,
-            cliente,
-            { new: true }
-          );
+          clienteDoc = await Cliente.findByIdAndUpdate(clienteId, cliente, {
+            new: true,
+          });
 
           if (!clienteDoc) {
             throw new Error("Cliente não encontrado");
           }
-
         }
 
         /*
@@ -313,14 +297,12 @@ router.post("/upload", async (req, res) => {
         ========================================
         */
         if (!files.length) {
-
           return res.status(200).json({
             error: false,
             message: "Cliente salvo sem alterar foto",
             clienteId: clienteDoc._id,
             foto: clienteDoc.foto || null,
           });
-
         }
 
         /*
@@ -334,10 +316,8 @@ router.post("/upload", async (req, res) => {
         });
 
         for (const arquivo of arquivosAntigos) {
-
           await awsService.deleteFromS3(arquivo.caminhoArquivo);
           await arquivo.deleteOne();
-
         }
 
         /*
@@ -348,7 +328,6 @@ router.post("/upload", async (req, res) => {
         const arquivosDocs = [];
 
         for (const f of files) {
-
           const ext = f.filename.split(".").pop();
 
           const key = `clientes/${clienteDoc._id}/${Date.now()}-${Math.random()
@@ -358,7 +337,7 @@ router.post("/upload", async (req, res) => {
           const upload = await awsService.uploadBufferToS3(
             f.buffer,
             key,
-            f.mimeType
+            f.mimeType,
           );
 
           if (upload.error) {
@@ -374,7 +353,6 @@ router.post("/upload", async (req, res) => {
             tipoMime: f.mimeType,
             tamanho: f.tamanho,
           });
-
         }
 
         await Arquivos.insertMany(arquivosDocs);
@@ -394,31 +372,24 @@ router.post("/upload", async (req, res) => {
           clienteId: clienteDoc._id,
           foto: arquivosDocs[0].caminhoArquivo,
         });
-
       } catch (err) {
-
         console.error("Erro upload cliente:", err);
 
         return res.status(500).json({
           error: true,
           message: err.message,
         });
-
       }
-
     });
 
     req.pipe(busboy);
-
   } catch (err) {
-
     console.error("Erro geral upload cliente:", err);
 
     return res.status(500).json({
       error: true,
       message: "Erro interno no upload",
     });
-
   }
 });
 module.exports = router;

@@ -13,140 +13,172 @@ const Arquivos = require("../models/arquivo");
    CRIAR SALÃO
 =============================== */
 
-router.post("/", async (req, res) => {
+
+router.post("/upload", async (req, res) => {
   try {
+    if (!req.headers["content-type"]?.includes("multipart/form-data")) {
+      return res.status(400).json({
+        error: true,
+        message: "Request precisa ser multipart/form-data",
+      });
+    }
 
-    const salao = await new Salao(req.body).save();
+    const busboy = Busboy({ headers: req.headers });
 
-    res.status(201).json({
-      error: false,
-      salao
+    const filePromises = [];
+
+    /* =========================================
+       CAPTURA DOS ARQUIVOS
+    ========================================= */
+    busboy.on("file", (fieldname, file, info) => {
+      const { filename, mimeType } = info;
+
+      if (!filename) {
+        file.resume();
+        return;
+      }
+
+      const promise = new Promise((resolve, reject) => {
+        const chunks = [];
+        let tamanho = 0;
+
+        file.on("data", (chunk) => {
+          chunks.push(chunk);
+          tamanho += chunk.length;
+        });
+
+        file.on("end", () => {
+          resolve({
+            filename,
+            mimeType,
+            buffer: Buffer.concat(chunks),
+            tamanho,
+            fieldname, // 🔥 foto | capa
+          });
+        });
+
+        file.on("error", reject);
+      });
+
+      filePromises.push(promise);
     });
 
+    /* =========================================
+       FINALIZAÇÃO
+    ========================================= */
+    busboy.on("finish", async () => {
+      try {
+        const salaoId = req.salaoId; 
+        console.log(salaoId);
+        
+        const files = await Promise.all(filePromises);
+
+        if (!files.length) {
+          return res.status(400).json({
+            error: true,
+            message: "Nenhum arquivo enviado",
+          });
+        }
+
+        const salaoDoc = await Salao.findById(salaoId);
+
+        if (!salaoDoc) {
+          return res.status(404).json({
+            error: true,
+            message: "Salão não encontrado",
+          });
+        }
+
+        /* =========================================
+           REMOVE ARQUIVOS ANTIGOS
+        ========================================= */
+        const arquivosAntigos = await Arquivos.find({
+          referenciaId: salaoId,
+          model: "Salao",
+        });
+
+        for (const arquivo of arquivosAntigos) {
+          await awsService.deleteFromS3(arquivo.caminhoArquivo);
+          await arquivo.deleteOne();
+        }
+
+        /* =========================================
+           UPLOAD PARA S3
+        ========================================= */
+        const arquivosDocs = [];
+        const updateData = {};
+
+        for (const f of files) {
+          const ext = f.filename.split(".").pop();
+
+          const key = `saloes/${salaoId}/${f.fieldname}-${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2)}.${ext}`;
+
+          const upload = await awsService.uploadBufferToS3(
+            f.buffer,
+            key,
+            f.mimeType
+          );
+
+          if (upload.error) {
+            throw new Error(upload.message);
+          }
+
+          const url = `${process.env.S3_BUCKET}/${key}`;
+
+          arquivosDocs.push({
+            referenciaId: salaoId,
+            model: "Salao",
+            nome: f.filename,
+            descricao: f.fieldname, // 🔥 foto | capa
+            caminhoArquivo: url,
+            tipoMime: f.mimeType,
+            tamanho: f.tamanho,
+          });
+
+          // 🔥 atualiza dinamicamente
+          if (f.fieldname === "foto") {
+            updateData.foto = url;
+          }
+
+          if (f.fieldname === "capa") {
+            updateData.capa = url;
+          }
+        }
+
+        await Arquivos.insertMany(arquivosDocs);
+
+        /* =========================================
+           ATUALIZA SALÃO
+        ========================================= */
+        await Salao.findByIdAndUpdate(salaoId, updateData);
+
+        return res.status(200).json({
+          error: false,
+          message: "Upload realizado com sucesso",
+          ...updateData, // 🔥 retorna foto e/ou capa direto
+        });
+
+      } catch (err) {
+        console.error("Erro no upload salão:", err);
+        return res.status(500).json({
+          error: true,
+          message: err.message,
+        });
+      }
+    });
+
+    req.pipe(busboy);
+
   } catch (err) {
-
-    console.error("Erro ao cadastrar salão:", err);
-
+    console.error("Erro geral upload salão:", err);
     res.status(500).json({
       error: true,
-      message: "Erro ao cadastrar salão"
+      message: "Erro interno no upload",
     });
   }
 });
-
-router.post('/upload', (req, res) => {
-
-    if (!req.headers['content-type']?.includes('multipart/form-data')) {
-        return res.status(400).json({
-            erro: 'Request precisa ser multipart/form-data'
-        })
-    }
-
-    const busboy = Busboy({ headers: req.headers })
-
-    const fields = {}
-    const filePromises = []
-
-    busboy.on('field', (name, value) => {
-        fields[name] = value
-    })
-
-    busboy.on('file', (fieldname, file, info) => {
-
-        const { filename, mimeType } = info
-
-        if (!filename) {
-            file.resume()
-            return
-        }
-
-        const promise = new Promise((resolve, reject) => {
-
-            const chunks = []
-            let tamanho = 0
-
-            file.on('data', chunk => {
-                chunks.push(chunk)
-                tamanho += chunk.length
-            })
-
-            file.on('end', () => {
-                resolve({
-                    filename,
-                    mimeType,
-                    buffer: Buffer.concat(chunks),
-                    tamanho,
-                    fieldname // foto | capa
-                })
-            })
-
-            file.on('error', reject)
-        })
-
-        filePromises.push(promise)
-    })
-
-    busboy.on('finish', async () => {
-
-        try {
-
-            const files = await Promise.all(filePromises)
-
-            if (!fields.salaoId)
-                return res.status(400).json({ erro: 'salaoId obrigatório' })
-
-            const arquivosDocs = []
-
-            for (const f of files) {
-
-                const ext = f.filename.split('.').pop()
-
-                const key =
-                    `saloes/${fields.salaoId}/${f.fieldname}-${Date.now()}.${ext}`
-
-                const upload =
-                    await awsService.uploadBufferToS3(
-                        f.buffer,
-                        key,
-                        f.mimeType
-                    )
-
-                if (upload.error)
-                    throw new Error(upload.message)
-
-                arquivosDocs.push({
-                    referenciaId: fields.salaoId,
-                    model: 'Salao',
-                    nome: f.filename,
-                    descricao: f.fieldname, // foto | capa
-                    caminhoArquivo: key,
-                    tipoMime: f.mimeType,
-                    tamanho: f.tamanho
-                })
-            }
-
-            if (arquivosDocs.length) {
-                await Arquivos.insertMany(arquivosDocs)
-            }
-
-            res.status(201).json({
-                error: false,
-                arquivos: arquivosDocs
-            })
-
-        } catch (err) {
-            console.error(err)
-            res.status(500).json({
-                error: true,
-                message: err.message
-            })
-        }
-    })
-
-    req.pipe(busboy)
-})
-
-
 /* ===============================
    LISTAR SERVIÇOS DO SALÃO
 =============================== */

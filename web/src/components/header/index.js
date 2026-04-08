@@ -1,20 +1,77 @@
+import { useDispatch, useSelector } from "react-redux";
+import { useState, useRef, useEffect } from "react";
+import types from "../../store/modules/auth/authTypes";
+
 const Header = () => {
+  const { salao } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <header className="container-fluid d-flex justify-content-end align-items-center ">
-      <div className="d-flex h-100 align-items-center gap-2">
-        
+    <header className="container-fluid d-flex justify-content-end align-items-center">
+      <div
+        className="d-flex h-100 align-items-center gap-2 position-relative"
+        ref={dropdownRef}
+      >
         <div className="text-end text-white">
-          <span className="d-block fw-bold">Barba & Corte</span>
-          <small className="opacity-75">Plano Gold</small>
+          <span className="d-block fw-bold py-1">{salao?.nome || "Meu Salão"}</span>
+          <small className="opacity-75 ">Plano Gold</small>
         </div>
 
-        <img
-          src="https://cdn-images.dzcdn.net/images/cover/de5852bd5264d4b5707a2b6bb186a2c6/0x1900-000000-80-0-0.jpg"
-          alt="User Avatar"
+        <div className="avatar">
+          {salao?.foto ? (
+            <img
+              src={salao.foto}
+              alt="avatar"
+              className="avatar-img"
+            />
+          ) : (
+            <div className="avatar-fallback">
+              {salao?.nome?.charAt(0)?.toUpperCase() || "S"}
+            </div>
+          )}
+        </div>
+
+        {/* 🔽 Trigger */}
+        <span
+          className="mdi mdi-chevron-down text-white fs-4"
+          style={{ cursor: "pointer" }}
+          onClick={() => setOpen(!open)}
         />
 
-        <span className="mdi mdi-chevron-down text-white fs-4"></span>
-
+        {/* 📦 Dropdown */}
+        {open && (
+          <div
+            className="position-absolute bg-white shadow rounded"
+            style={{
+              top: "60px",
+              right: 0,
+              minWidth: "150px",
+              zIndex: 1000,
+            }}
+          >
+            <button
+              onClick={() => dispatch({ type: types.LOGOUT })}
+              className="dropdown-item d-flex align-items-center gap-2"
+            >
+              <span className="mdi mdi-logout" />
+              Sair
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -15,8 +15,9 @@ const colaboradorRoutes = require("./src/routes/colaborador.routes");
 const webhook = require("./src/routes/webhook.routes");
 const agendamentoRoutes = require("./src/routes/agendamento.routes");
 const clienteRoutes = require("./src/routes/cliente.routes");
-
+const authRoutes = require("./src/routes/auth.routes");
 const app = express();
+const authMiddleware = require("./src/middleware/authMiddleware");
 
 // Middlewares
 app.use(morgan("dev"));
@@ -26,14 +27,17 @@ app.use(cors());
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Routes
-app.use("/salao", salaoRoutes);
-app.use("/servicos", servicosRoutes);
-app.use("/horario", horarioRoutes);
-app.use("/colaborador", colaboradorRoutes);
-app.use("/webhook", webhook);
-app.use("/agendamento", agendamentoRoutes);
-app.use("/cliente", clienteRoutes);
+// 🔓 Rotas públicas
+app.use("/auth", authRoutes);
+app.use("/webhook", webhook); // geralmente webhook não usa auth
+
+// 🔐 Rotas protegidas (TODAS usam token)
+app.use("/salao", authMiddleware, salaoRoutes);
+app.use("/servicos", authMiddleware, servicosRoutes);
+app.use("/horario", authMiddleware, horarioRoutes);
+app.use("/colaborador", authMiddleware, colaboradorRoutes);
+app.use("/agendamento", authMiddleware, agendamentoRoutes);
+app.use("/cliente", authMiddleware, clienteRoutes);
 
 // Server
 const PORT = process.env.PORT || 8000;

@@ -2,7 +2,6 @@ import moment from "moment";
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DatePicker, Modal, SelectPicker } from "rsuite";
-import consts from "../../consts/consts";
 import types from "../../store/modules/agendamento/types";
 import clienteTypes from "../../store/modules/cliente/types";
 import colaboradorTypes from "../../store/modules/colaboradores/types";
@@ -36,9 +35,9 @@ const AgendamentoFormModal = ({
   // ✅ 1) Carrega as listas sempre que o modal abre
   useEffect(() => {
     if (open) {
-      dispatch({ type: servicoTypes.LIST_SERVICOS_REQUEST,      payload: consts.salaoId });
-      dispatch({ type: clienteTypes.GET_CLIENTES_REQUEST,       payload: consts.salaoId });
-      dispatch({ type: colaboradorTypes.LIST_COLABORADORES_REQUEST, payload: consts.salaoId });
+      dispatch({ type: servicoTypes.LIST_SERVICOS_REQUEST });
+      dispatch({ type: clienteTypes.GET_CLIENTES_REQUEST });
+      dispatch({ type: colaboradorTypes.LIST_COLABORADORES_REQUEST });
     }
   }, [open, dispatch]);
 
@@ -134,7 +133,6 @@ const AgendamentoFormModal = ({
     { label: "Pendente",   value: "aguardando_pagamento" },
     { label: "Confirmado", value: "confirmado" },
     { label: "Cancelado",  value: "cancelado" },
-    { label: "Concluído",  value: "concluido" },
   ];
 
   return (

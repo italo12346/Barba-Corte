@@ -1,25 +1,17 @@
 import { call, put, takeLatest } from "redux-saga/effects";
-import { toast } from "react-toastify"; // troque pela lib de notificação que você usa
-import api from "../../../services/api"; // ajuste o path para o seu axios/api
+import { toast } from "react-toastify";
+import api from "../../../services/api";
 import types from "./types";
-import consts from "../../../consts/consts"; // ajuste o path
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 const agendamentoService = {
-  // ✅ POST /agendamento/filter com body { range, salaoId }
   filter: (start, end) =>
-    api.post("/agendamento/filter", {
-      salaoId: consts.salaoId,
-      range: { start, end },
-    }),
+    api.post("/agendamento/filter", { range: { start, end } }),
 
-  // ✅ POST /agendamento
   create: (dados) => api.post("/agendamento", dados),
 
-  // ✅ PUT /agendamento/:id
   update: (id, dados) => api.put(`/agendamento/${id}`, dados),
 
-  // ✅ DELETE /agendamento/:id
   remove: (id) => api.delete(`/agendamento/${id}`),
 };
 
@@ -30,7 +22,6 @@ function* filterAgendamentosSaga({ payload }) {
     const { start, end } = payload;
     const { data } = yield call(agendamentoService.filter, start, end);
 
-    // A API retorna { error: false, agendamentos: [...] }
     yield put({
       type: types.FILTER_AGENDAMENTOS_SUCCESS,
       payload: data.agendamentos || [],
@@ -43,12 +34,8 @@ function* filterAgendamentosSaga({ payload }) {
 
 function* createAgendamentoSaga({ payload }) {
   try {
-    const { data } = yield call(agendamentoService.create, {
-      salaoId: consts.salaoId,
-      ...payload,
-    });
+    const { data } = yield call(agendamentoService.create, payload); // ✅ sem salaoId
 
-    // A API retorna { error: false, agendamento: {...} }
     yield put({
       type: types.CREATE_AGENDAMENTO_SUCCESS,
       payload: data.agendamento,
@@ -66,7 +53,6 @@ function* updateAgendamentoSaga({ payload }) {
     const { id, dados } = payload;
     const { data } = yield call(agendamentoService.update, id, dados);
 
-    // A API retorna { error: false, agendamento: {...} } (já populado)
     yield put({
       type: types.UPDATE_AGENDAMENTO_SUCCESS,
       payload: data.agendamento,

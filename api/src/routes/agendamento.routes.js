@@ -36,15 +36,16 @@ CRIAR AGENDAMENTO
 
 router.post("/", async (req, res) => {
   try {
-    const {
-      salaoId,
-      servicoId,
-      clienteId,
-      colaboradorId,
-      dataAgendamento,
-    } = req.body;
+    const { servicoId, clienteId, colaboradorId, dataAgendamento } = req.body;
+    const salaoId = req.salaoId;
 
-    if (!salaoId || !servicoId || !clienteId || !colaboradorId || !dataAgendamento) {
+    if (
+      !salaoId ||
+      !servicoId ||
+      !clienteId ||
+      !colaboradorId ||
+      !dataAgendamento
+    ) {
       return res.status(400).json({
         error: true,
         message: "Dados obrigatórios não enviados",
@@ -74,7 +75,8 @@ router.post("/", async (req, res) => {
     if (agendaMin < inicioMin || agendaMin >= fimMin) {
       return res.status(400).json({
         error: true,
-        message: "Horário fora do expediente desse colaborador, por favor selecionar outro",
+        message:
+          "Horário fora do expediente desse colaborador, por favor selecionar outro",
       });
     }
 
@@ -118,7 +120,6 @@ router.post("/", async (req, res) => {
       error: false,
       agendamento,
     });
-
   } catch (err) {
     console.error("Erro agendamento:", err);
 
@@ -187,11 +188,11 @@ router.post("/pix/:agendamentoId", async (req, res) => {
     res.status(201).json({
       error: false,
       qrCode: pagamentoMP.point_of_interaction.transaction_data.qr_code,
-      qrBase64: pagamentoMP.point_of_interaction.transaction_data.qr_code_base64,
+      qrBase64:
+        pagamentoMP.point_of_interaction.transaction_data.qr_code_base64,
       link: pagamentoMP.point_of_interaction.transaction_data.ticket_url,
       expiracao,
     });
-
   } catch (err) {
     console.error("Erro PIX:", err);
 
@@ -210,7 +211,8 @@ FILTRO DE AGENDAMENTOS
 
 router.post("/filter", async (req, res) => {
   try {
-    const { range, salaoId } = req.body;
+    const { range } = req.body;
+    const salaoId = req.salaoId;
 
     const agendamentos = await Agendamento.find({
       salaoId,
@@ -226,7 +228,6 @@ router.post("/filter", async (req, res) => {
     ]);
 
     res.json({ error: false, agendamentos });
-
   } catch (err) {
     res.json({ error: true, message: err.message });
   }
@@ -240,7 +241,8 @@ DIAS DISPONÍVEIS
 
 router.post("/dias-disponiveis", async (req, res) => {
   try {
-    const { data, salaoId, servicoId } = req.body;
+    const { data, servicoId } = req.body;
+    const salaoId = req.salaoId;
 
     if (!data || !salaoId || !servicoId) {
       return res.status(400).json({
@@ -318,8 +320,8 @@ router.post("/dias-disponiveis", async (req, res) => {
       const dia = base.clone().add(i, "days");
       const diaSemana = dia.day();
 
-      const horariosDia = horarios.filter(h =>
-        h.diasSemana.includes(diaSemana)
+      const horariosDia = horarios.filter((h) =>
+        h.diasSemana.includes(diaSemana),
       );
 
       if (!horariosDia.length) continue;
@@ -347,7 +349,7 @@ router.post("/dias-disponiveis", async (req, res) => {
           },
         });
 
-        const ocupados = agendamentos.map(a => {
+        const ocupados = agendamentos.map((a) => {
           const m = moment(a.dataAgendamento).tz(TZ);
           return m.hours() * 60 + m.minutes();
         });
@@ -358,11 +360,9 @@ router.post("/dias-disponiveis", async (req, res) => {
         =====================================
         */
 
-        const horariosStatus = slots.map(min => ({
+        const horariosStatus = slots.map((min) => ({
           hora: minutesToHHMM(min),
-          status: ocupados.includes(min)
-            ? "reservado"
-            : "livre",
+          status: ocupados.includes(min) ? "reservado" : "livre",
         }));
 
         disponibilidadeDia.push({
@@ -383,7 +383,6 @@ router.post("/dias-disponiveis", async (req, res) => {
       error: false,
       agenda,
     });
-
   } catch (err) {
     console.error("DISPONIBILIDADE ERRO:", err);
 
@@ -400,31 +399,30 @@ router.get("/cliente/:clienteId", async (req, res) => {
     const { clienteId } = req.params;
 
     const agendamentos = await Agendamento.find({
-      clienteId
+      clienteId,
     })
       .populate({ path: "servicoId", select: "titulo" })
       .populate({ path: "colaboradorId", select: "nome" })
       .sort({ dataAgendamento: -1 });
 
-    const resultado = agendamentos.map(a => ({
+    const resultado = agendamentos.map((a) => ({
       servico: a.servicoId?.titulo,
       colaborador: a.colaboradorId?.nome,
       data: a.dataAgendamento,
       status: a.status,
-      valor: a.valorServico
+      valor: a.valorServico,
     }));
 
     return res.json({
       error: false,
-      agendamentos: resultado
+      agendamentos: resultado,
     });
-
   } catch (err) {
     console.error("Erro ao buscar agendamentos do cliente:", err);
 
     return res.status(500).json({
       error: true,
-      message: "Erro ao buscar agendamentos"
+      message: "Erro ao buscar agendamentos",
     });
   }
 });
@@ -511,7 +509,6 @@ router.put("/:id", async (req, res) => {
       error: false,
       agendamento: populado,
     });
-
   } catch (err) {
     console.error("Erro update agendamento:", err);
     return res.status(500).json({
@@ -531,8 +528,10 @@ DELETE /agendamento/:id
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
-    const agendamento = await Agendamento.findById(id);
+    const agendamento = await Agendamento.findOne({
+      _id: id,
+      salaoId: req.salaoId,
+    });
 
     if (!agendamento) {
       return res.status(404).json({
@@ -555,7 +554,6 @@ router.delete("/:id", async (req, res) => {
       error: false,
       message: "Agendamento excluído com sucesso",
     });
-
   } catch (err) {
     console.error("Erro delete agendamento:", err);
     return res.status(500).json({
@@ -564,6 +562,5 @@ router.delete("/:id", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

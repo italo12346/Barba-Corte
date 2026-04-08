@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "rsuite";
 import { useNavigate } from "react-router-dom";
-import * as actions from "../../store/modules/login/actions";
+import types from "../../store/modules/auth/authTypes";
 import logo from '../../assets/Barba&cortedark.png';
 import "./login.css";
 
@@ -10,35 +10,26 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { loading, error, authenticated } = useSelector(
-    (state) => state.auth
-  );
+  // ✅ "autenticado" — nome usado no reducer gerado
+  const { loading, error, autenticado } = useSelector((s) => s.auth);
 
-  const [form, setForm] = useState({
-    email: "",
-    senha: ""
-  });
-
+  const [form, setForm] = useState({ email: "", senha: "" });
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(actions.loginRequest(form.email, form.senha));
+    // ✅ dispara o type diretamente, sem depender de actions.js externo
+    dispatch({ type: types.LOGIN_REQUEST, payload: { email: form.email, senha: form.senha } });
   };
 
   useEffect(() => {
-    if (authenticated) {
-      navigate("/");
-    }
-  }, [authenticated, navigate]);
+    if (autenticado) navigate("/");
+  }, [autenticado, navigate]);
 
   return (
     <div className="login-wrapper">
@@ -63,7 +54,6 @@ const Login = () => {
 
           <div className="input-group">
             <label>Senha</label>
-
             <div className="senha-wrapper">
               <input
                 type={mostrarSenha ? "text" : "password"}
@@ -72,23 +62,14 @@ const Login = () => {
                 onChange={handleChange}
                 required
               />
-
               <span
-                className={`mdi ${
-                  mostrarSenha
-                    ? "mdi-eye-off-outline"
-                    : "mdi-eye-outline"
-                } toggle-senha`}
+                className={`mdi ${mostrarSenha ? "mdi-eye-off-outline" : "mdi-eye-outline"} toggle-senha`}
                 onClick={() => setMostrarSenha(!mostrarSenha)}
               />
             </div>
           </div>
 
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           <Button
             appearance="primary"
@@ -99,11 +80,10 @@ const Login = () => {
           >
             Entrar
           </Button>
+
           <p className="voltar-login">
             Não tem conta?{" "}
-            <span onClick={() => navigate("/cadastro")}>
-              Cadastrar
-            </span>
+            <span onClick={() => navigate("/cadastro")}>Cadastrar</span>
           </p>
         </form>
       </div>

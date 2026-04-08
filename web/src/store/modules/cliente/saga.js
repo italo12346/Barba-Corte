@@ -1,6 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
 import api from "../../../services/api";
-import consts from "../../../consts/consts";
 import types from "./types";
 
 /* =====================================================
@@ -8,7 +7,7 @@ import types from "./types";
 ===================================================== */
 function* listClientes() {
   try {
-    const response = yield call(api.get, `/cliente/${consts.salaoId}`);
+    const response = yield call(api.get, `/cliente/`);
 
     yield put({
       type: types.GET_CLIENTES_SUCCESS,
@@ -24,12 +23,10 @@ function* listClientes() {
 
 function* createCliente({ payload }) {
   try {
-    const { salaoId } = consts;
     const { fotoFile, ...cliente } = payload;
 
     const formData = new FormData();
 
-    formData.append("salaoId", salaoId);
     formData.append("cliente", JSON.stringify(cliente));
 
     if (fotoFile) {
@@ -42,7 +39,6 @@ function* createCliente({ payload }) {
     yield put({ type: types.GET_CLIENTES_REQUEST });
     yield put({
       type: types.LIST_CLIENTES_REQUEST,
-      payload: salaoId,
     });
   } catch (err) {
     yield put({
