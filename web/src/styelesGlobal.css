@@ -44,6 +44,7 @@ header span:not(.mdi) {
 aside {
   position: absolute;
   background-color: var(--dark);
+  height: 160% !important;
 }
 
 aside ul li a {
@@ -328,7 +329,7 @@ aside ul li a:hover .mdi {
   margin-top: -5px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .container {
     margin: 0 -2rem;
     padding: 0;

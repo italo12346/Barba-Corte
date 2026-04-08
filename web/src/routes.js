@@ -10,6 +10,7 @@ import PrivateLayout from "./layouts/PrivateLayout";
 import Colaboradores from "./pages/Colaboradores";
 import ServicosPage from "./pages/Servicos";
 import Horario from "./pages/Horarios";
+import Profile from "./pages/Profile";
 
 // ✅ PrivateRoute inline — sem precisar de arquivo separado
 const PrivateRoute = ({ children }) => {
@@ -37,6 +38,7 @@ const AppRoutes = () => {
         <Route path="/colaboradores" element={<PrivateRoute><PrivateLayout><Colaboradores /></PrivateLayout></PrivateRoute>} />
         <Route path="/servicos" element={<PrivateRoute><PrivateLayout><ServicosPage /></PrivateLayout></PrivateRoute>} />
         <Route path="/horarios" element={<PrivateRoute><PrivateLayout><Horario /></PrivateLayout></PrivateRoute>} />
+        <Route path="/perfil" element={<PrivateRoute><PrivateLayout><Profile /></PrivateLayout></PrivateRoute>} />
       </Routes>
     </Router>
   );

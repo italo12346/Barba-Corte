@@ -4,12 +4,11 @@ const initialState = {
   agendamentos: [],
   loading: false,
   error: null,
-  success: false, 
+  success: false,
 };
 
 const agendamentoReducer = (state = initialState, action) => {
   switch (action.type) {
-
     // ── Loading genérico ──────────────────────────────────────────────────
     case types.FILTER_AGENDAMENTOS:
     case types.CREATE_AGENDAMENTO:
@@ -31,7 +30,8 @@ const agendamentoReducer = (state = initialState, action) => {
         success: true,
         agendamentos: [...state.agendamentos, action.payload],
       };
-
+    case types.RESET_SUCCESS:
+      return { ...state, success: false, error: null };
     // ── Editar ────────────────────────────────────────────────────────────
     case types.UPDATE_AGENDAMENTO_SUCCESS:
       // payload = agendamento atualizado e populado (objeto único)
@@ -40,7 +40,7 @@ const agendamentoReducer = (state = initialState, action) => {
         loading: false,
         success: true,
         agendamentos: state.agendamentos.map((a) =>
-          a._id === action.payload._id ? action.payload : a
+          a._id === action.payload._id ? action.payload : a,
         ),
       };
 
@@ -52,7 +52,7 @@ const agendamentoReducer = (state = initialState, action) => {
         loading: false,
         success: true,
         agendamentos: state.agendamentos.filter(
-          (a) => a._id !== action.payload.id
+          (a) => a._id !== action.payload.id,
         ),
       };
 

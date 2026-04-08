@@ -8,8 +8,8 @@ const Sidebar = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 900);
-      if (window.innerWidth >= 900) setMenuAberto(false);
+      setIsMobile(window.innerWidth < 1000);
+      if (window.innerWidth >= 1000) setMenuAberto(false);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -26,7 +26,7 @@ const Sidebar = () => {
   // ── Desktop — sidebar original ────────────────────────────────────────────
   if (!isMobile) {
     return (
-      <aside className="col-2 vh-100 text-white">
+      <aside className="col-2 text-white">
         <img src={logo} alt="Logo" className="img-fluid px-3 py-4" />
         <ul className="list-unstyled px-3">
           {links.map(({ to, end, icon, label }) => (

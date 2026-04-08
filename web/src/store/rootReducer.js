@@ -6,6 +6,7 @@ import colaborador from "./modules/colaboradores/reducer";
 import servico from "./modules/servico/reducer";
 import horario from "./modules/horario/reducer";
 import authReducer from "./modules/auth/authReducer";
+import profileReducer from "./modules/perfil/reducer"; 
 
 const rootReducer = combineReducers({
   agendamento: agendamentoReducer,
@@ -14,7 +15,8 @@ const rootReducer = combineReducers({
   colaborador,
   servico,
   horario,
-  auth: authReducer
+  auth: authReducer,
+  perfil: profileReducer, 
 });
 
 export default rootReducer;

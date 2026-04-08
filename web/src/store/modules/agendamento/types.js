@@ -18,6 +18,8 @@ const types = {
   DELETE_AGENDAMENTO:         "agendamento/DELETE_AGENDAMENTO",
   DELETE_AGENDAMENTO_SUCCESS: "agendamento/DELETE_AGENDAMENTO_SUCCESS",
   DELETE_AGENDAMENTO_FAILURE: "agendamento/DELETE_AGENDAMENTO_FAILURE",
+
+  RESET_SUCCESS: "@agendamento/RESET_SUCCESS",
 };
 
 export default types;

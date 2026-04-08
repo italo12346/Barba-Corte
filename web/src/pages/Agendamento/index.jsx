@@ -63,12 +63,12 @@ const Agendamento = () => {
     setFormModalOpen(true);
   };
 
-  const handleFecharForm = () => {
-    setFormModalOpen(false);
-    setAgendamentoSelecionado(null);
-    setSlotSelecionado(null);
-  };
-
+const handleFecharForm = () => {
+  setFormModalOpen(false);
+  setAgendamentoSelecionado(null);
+  setSlotSelecionado(null);
+  dispatch({ type: types.RESET_SUCCESS }); 
+};
   // ── Range change ─────────────────────────────────────────────────────────
   const formatRange = (periodo) => {
     if (Array.isArray(periodo)) {

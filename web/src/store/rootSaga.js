@@ -5,6 +5,7 @@ import colaboradorSaga from "./modules/colaboradores/sagas";
 import servicoSaga from "./modules/servico/sagas";
 import horarioSaga from "./modules/horario/sagas";
 import authSaga from "./modules/auth/authSagas";
+import perfilSaga from "./modules/perfil/sagas";
 
 export default function* rootSaga() {
   yield all([
@@ -14,5 +15,6 @@ export default function* rootSaga() {
     servicoSaga(),
     horarioSaga(),
     authSaga(),
+    perfilSaga(),
   ]);
 }

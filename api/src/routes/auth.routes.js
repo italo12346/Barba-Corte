@@ -12,26 +12,7 @@ const JWT_EXPIRES = "7d";
 /* ===============================
    REGISTRO
 =============================== */
-router.post("/", async (req, res) => {
-  try {
 
-    const salao = await new Salao(req.body).save();
-
-    res.status(201).json({
-      error: false,
-      salao
-    });
-
-  } catch (err) {
-
-    console.error("Erro ao cadastrar salão:", err);
-
-    res.status(500).json({
-      error: true,
-      message: "Erro ao cadastrar salão"
-    });
-  }
-});
 router.post("/register", async (req, res) => {
   try {
     const { nome, email, senha, telefone, endereco } = req.body;

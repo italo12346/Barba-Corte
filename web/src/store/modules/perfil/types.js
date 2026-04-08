@@ -1,0 +1,6 @@
+const types = {
+  UPDATE_PERFIL_REQUEST: '@perfil/UPDATE_PERFIL_REQUEST',
+  UPDATE_PERFIL_SUCCESS: '@perfil/UPDATE_PERFIL_SUCCESS',
+  UPDATE_PERFIL_FAILURE: '@perfil/UPDATE_PERFIL_FAILURE',
+}
+export default types;

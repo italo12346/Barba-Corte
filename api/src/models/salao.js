@@ -10,6 +10,7 @@ const SalaoSchema = new Schema(
     senha: String,
     telefone: { type: String, required: true },
     endereco: {
+      logradouro: String,
       cidade: String,
       uf: String,
       cep: String,

@@ -10,7 +10,6 @@ import {
 
 import ServicoModal from "../../components/servicoModal";
 import ServicosViewModal from "../../components/servicoViewModal";
-import consts from "../../consts/consts";
 import { formatarDuracao, minutosParaDate } from "../../util/functionAux";
 
 const { Column, HeaderCell, Cell } = Table;
@@ -28,7 +27,7 @@ export default function ServicosPage() {
   const [servicoSelecionado, setServicoSelecionado] = useState(null);
 
   useEffect(() => {
-    dispatch(listServicos(consts.salaoId));
+    dispatch(listServicos());
   }, [dispatch]);
 
   const salvar = () => {
@@ -40,9 +39,9 @@ export default function ServicosPage() {
     }
 
     if (formTratado._id) {
-      dispatch(updateServico({ servico: formTratado, salaoId: consts.salaoId }));
+      dispatch(updateServico({ servico: formTratado, }));
     } else {
-      dispatch(createServico({ ...formTratado, salaoId: consts.salaoId }));
+      dispatch(createServico({ ...formTratado, }));
     }
 
     setOpenForm(false);
@@ -58,7 +57,7 @@ export default function ServicosPage() {
   };
 
   const remover = ({ _id }) => {
-    dispatch(deleteServico({ id: _id, salaoId: consts.salaoId }));
+    dispatch(deleteServico({ id: _id, }));
   };
 
   return (

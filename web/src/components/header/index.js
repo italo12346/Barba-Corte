@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
 import types from "../../store/modules/auth/authTypes";
+import { NavLink } from "react-router-dom";
 
 const Header = () => {
   const { salao } = useSelector((state) => state.auth);
@@ -27,17 +28,15 @@ const Header = () => {
         ref={dropdownRef}
       >
         <div className="text-end text-white">
-          <span className="d-block fw-bold py-1">{salao?.nome || "Meu Salão"}</span>
+          <span className="d-block fw-bold py-1">
+            {salao?.nome || "Meu Salão"}
+          </span>
           <small className="opacity-75 ">Plano Gold</small>
         </div>
 
         <div className="avatar">
           {salao?.foto ? (
-            <img
-              src={salao.foto}
-              alt="avatar"
-              className="avatar-img"
-            />
+            <img src={salao.foto} alt="avatar" className="avatar-img" />
           ) : (
             <div className="avatar-fallback">
               {salao?.nome?.charAt(0)?.toUpperCase() || "S"}
@@ -63,9 +62,16 @@ const Header = () => {
               zIndex: 1000,
             }}
           >
+            <NavLink
+              to="/perfil"
+              className="dropdown-item d-flex align-items-center gap-2 text-dark"
+            >
+              <span className="mdi mdi-account" />
+              Perfil
+            </NavLink>
             <button
               onClick={() => dispatch({ type: types.LOGOUT })}
-              className="dropdown-item d-flex align-items-center gap-2"
+              className="dropdown-item d-flex align-items-center gap-2 text-dark"
             >
               <span className="mdi mdi-logout" />
               Sair
