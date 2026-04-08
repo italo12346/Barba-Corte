@@ -44,7 +44,7 @@ header span:not(.mdi) {
 aside {
   position: absolute;
   background-color: var(--dark);
-  height: 160% !important;
+  height: 170% !important;
 }
 
 aside ul li a {

@@ -333,7 +333,7 @@ export default function Profile() {
         </form>
 
         {/* 🔥 NOVO MAPA INTERATIVO (Substitui o iframe) */}
-        <div className="card-table mt-4">
+        <div className="card p-4 mt-4">
           <h6 className="profile-section-title"><span className="mdi mdi-map-marker-radius me-2" />Localização do Salão (Arraste o marcador)</h6>
           <p className="text-muted" style={{ fontSize: "0.85rem" }}>Caso o endereço não esteja exato, você pode arrastar o marcador azul para a posição correta.</p>
           
