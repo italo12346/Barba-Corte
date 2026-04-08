@@ -38,26 +38,27 @@ export default function ColaboradorModal({
   // ===============================
   // Inicialização controlada
   // ===============================
-  useEffect(() => {
-    if (!open) return;
+useEffect(() => {
+  if (!open) return;
 
-    if (!form?._id) {
-      setForm({
-        nome: "",
-        email: "",
-        telefone: "",
-        status: "A",
-        dataNascimento: null,
-        sexo: "",
-        especialidades: [],
-        fotoFile: null,
-      });
-    }
+  // inicializa form só quando criar
+  if (!form?._id) {
+    setForm({
+      nome: "",
+      email: "",
+      telefone: "",
+      status: "A",
+      dataNascimento: null,
+      sexo: "",
+      especialidades: [],
+      fotoFile: null,
+    });
+  }
 
-    if (salaoId) {
-      dispatch(allServicos(salaoId));
-    }
-  }, [open, salaoId, dispatch, setForm, form?._id]);
+  // 🔥 sempre busca serviços ao abrir
+  dispatch(allServicos());
+
+}, [open, dispatch, setForm, form?._id]);
 
   // ===============================
   // Change handler seguro
@@ -192,7 +193,7 @@ export default function ColaboradorModal({
       </Modal.Body>
 
       <Modal.Footer>
-        <Button appearance="primary" onClick={salvar}>
+        <Button className="btn" onClick={salvar}>
           Salvar
         </Button>
 

@@ -11,7 +11,6 @@ import {
 
 import ColaboradorModal from "../../components/colaboradorModal";
 import ColaboradorViewModal from "../../components/colaboradorViewModal";
-import consts from "../../consts/consts";
 
 const { Column, HeaderCell, Cell } = Table;
 
@@ -34,7 +33,7 @@ export default function Colaboradores() {
   // LOAD
   // ===============================
   useEffect(() => {
-    dispatch(allColaboradores(consts.salaoId));
+    dispatch(allColaboradores());
   }, [dispatch]);
 
   // ===============================
@@ -61,7 +60,6 @@ export default function Colaboradores() {
       console.log("DISPARANDO UPDATE com _id:", form._id);
       dispatch(
         updateColaborador({
-          salaoId: consts.salaoId,
           colaborador: { ...form }, // form deve ter _id
         }),
       );
@@ -69,7 +67,6 @@ export default function Colaboradores() {
       console.log("DISPARANDO CREATE");
       dispatch(
         createColaborador({
-          salaoId: consts.salaoId,
           ...form,
         }),
       );
@@ -83,8 +80,7 @@ export default function Colaboradores() {
 
     dispatch(
       unlikeColaborador({
-        id,
-        salaoId: consts.salaoId,
+        id
       }),
     );
   };
@@ -209,7 +205,6 @@ export default function Colaboradores() {
           form={form}
           setForm={setForm}
           salvar={salvar}
-          salaoId={consts.salaoId}
         />
 
         {/* MODAL VISUALIZAR 👁️ */}

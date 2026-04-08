@@ -1,20 +1,20 @@
 import { combineReducers } from "redux";
 import agendamentoReducer from "./modules/agendamento/reducer";
 import clienteReducer from "./modules/cliente/reducer";
-import authReducer from "./modules/login/reducer";
 import cadastroReducer from "./modules/cadastro/reducer";
 import colaborador from "./modules/colaboradores/reducer";
 import servico from "./modules/servico/reducer";
 import horario from "./modules/horario/reducer";
+import authReducer from "./modules/auth/authReducer";
 
 const rootReducer = combineReducers({
   agendamento: agendamentoReducer,
   cliente: clienteReducer,
-  auth: authReducer,
-  cadastro:cadastroReducer,
-  colaborador:colaborador,
+  cadastro: cadastroReducer,
+  colaborador,
   servico,
-   horario
+  horario,
+  auth: authReducer
 });
 
 export default rootReducer;

@@ -7,6 +7,7 @@ import '@mdi/font/css/materialdesignicons.min.css';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+store.dispatch({ type: "@auth/VERIFY_TOKEN_REQUEST" });
 root.render(
   <Provider store={store}>
     <Routes />

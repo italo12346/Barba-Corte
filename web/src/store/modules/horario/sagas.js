@@ -55,31 +55,19 @@ function horarioToEvents(horario, nomeColaborador = "") {
 // LISTAR HORÁRIOS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function* allHorariosSaga({ payload }) {
+function* allHorariosSaga() {  // ← sem { payload }
   try {
-    const { salaoId, colaboradorId, diaSemana } = payload;
+    const { data } = yield call(api.get, "/horario");  // ← sem params
 
-    const params = { salaoId };
-    if (colaboradorId) params.colaboradorId = colaboradorId;
-    if (diaSemana !== undefined) params.diaSemana = diaSemana;
-
-    const { data } = yield call(api.get, "/horario", { params });
-
-    // Pega a lista de colaboradores do store para montar o title
     const listaColaboradores = yield select(
-      (state) =>
-        state.colaboradores?.listaColaboradores ??
-        state.colaboradores?.colaboradores ??
-        state.colaboradores?.data ??
-        []
+      (state) => state.colaborador?.lista ?? []
     );
 
     const eventos = (data.horarios || []).flatMap((horario) => {
       const colaborador = listaColaboradores.find(
         (c) => c._id === String(horario.colaboradorId)
       );
-      const nome = colaborador?.nome || "";
-      return horarioToEvents(horario, nome);
+      return horarioToEvents(horario, colaborador?.nome || "");
     });
 
     yield put({ type: Types.ALL_HORARIOS_SUCCESS, payload: eventos });

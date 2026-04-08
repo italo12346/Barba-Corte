@@ -5,22 +5,14 @@ import types from "./types";
 /* ======================================
    LISTAR SERVIÇOS
 ====================================== */
-function* listServicos({ payload }) {
-   const salaoId = payload.salaoId || payload;
+function* listServicos() {
   try {
-    console.log({salaoId})
-    const { data } = yield call(
-      api.get,
-      `/servicos/servico/${salaoId}`
-    );
-    console.log("Resposta API:", data);
+    const { data } = yield call(api.get, `/servicos/servico/`);
 
-    
     yield put({
       type: types.LIST_SERVICOS_SUCCESS,
       payload: data.servicos,
     });
-
   } catch (err) {
     yield put({
       type: types.LIST_SERVICOS_FAILURE,
@@ -48,7 +40,7 @@ function* createServico({ payload }) {
         duracao: payload.duracao,
         status: payload.status || "A",
         recorrencia: payload.recorrencia || "UNICO",
-      })
+      }),
     );
 
     // ✅ usa novaImagem (File direto) igual ao update
@@ -64,7 +56,6 @@ function* createServico({ payload }) {
       type: types.LIST_SERVICOS_REQUEST,
       payload: payload.salaoId,
     });
-
   } catch (err) {
     console.error("❌ CREATE_SERVICO error:", err.response?.data || err);
     yield put({
@@ -77,14 +68,10 @@ function* createServico({ payload }) {
 /* ======================================
    ATUALIZAR SERVIÇO
 ====================================== */
-/* ======================================
-   ATUALIZAR SERVIÇO
-====================================== */
 function* updateServico({ payload }) {
   try {
     const { servico, salaoId } = payload;
     const { _id, arquivos, novaImagem, ...data } = servico;
-
 
     if (novaImagem) {
       const formData = new FormData();
@@ -99,12 +86,11 @@ function* updateServico({ payload }) {
           "Content-Type": "multipart/form-data",
         },
       });
-    }
+    } else {
 
     /* ==================================================
        SE NÃO TEM NOVA IMAGEM → PUT NORMAL
     ================================================== */
-    else {
       yield call(api.put, `/servicos/${_id}`, data);
     }
 
@@ -114,7 +100,6 @@ function* updateServico({ payload }) {
       type: types.LIST_SERVICOS_REQUEST,
       payload: salaoId,
     });
-
   } catch (err) {
     yield put({
       type: types.UPDATE_SERVICO_FAILURE,
@@ -122,7 +107,6 @@ function* updateServico({ payload }) {
     });
   }
 }
-
 
 /* ======================================
    REMOVER SERVIÇO
@@ -139,7 +123,6 @@ function* deleteServico({ payload }) {
       type: types.LIST_SERVICOS_REQUEST,
       payload: salaoId,
     });
-
   } catch (err) {
     yield put({
       type: types.DELETE_SERVICO_FAILURE,
