@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react"; // 👈 useRef adicionado
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,18 +16,25 @@ const Agendamento = () => {
   const dispatch = useDispatch();
   const agendamentos = useSelector((state) => state.agendamento.agendamentos);
 
+  // ── Range atual ──────────────────────────────────────────────────────────
+  const currentRangeRef = useRef({
+    start: moment().startOf("week").format("YYYY-MM-DD"),
+    end:   moment().endOf("week").format("YYYY-MM-DD"),
+  });
+
   // ── Estado dos modais ────────────────────────────────────────────────────
-  const [viewModalOpen, setViewModalOpen]   = useState(false);
-  const [formModalOpen, setFormModalOpen]   = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [formModalOpen, setFormModalOpen] = useState(false);
 
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
   const [slotSelecionado, setSlotSelecionado]               = useState(null);
 
   // ── Carga inicial ────────────────────────────────────────────────────────
   useEffect(() => {
-    const start = moment().startOf("week").toISOString();
-    const end   = moment().endOf("week").toISOString();
-    dispatch({ type: types.FILTER_AGENDAMENTOS, payload: { start, end } });
+    dispatch({
+      type: types.FILTER_AGENDAMENTOS,
+      payload: currentRangeRef.current, // 👈 usa a ref já inicializada
+    });
   }, [dispatch]);
 
   // ── Mapeamento de eventos ────────────────────────────────────────────────
@@ -41,34 +48,6 @@ const Agendamento = () => {
     [agendamentos]
   );
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  /** Clique num evento existente → abre modal de visualização */
-  const handleSelectEvent = (event) => {
-    setAgendamentoSelecionado(event.resource);
-    setViewModalOpen(true);
-  };
-
-  /** Clique num slot vazio → abre modal de criação com data pré-preenchida */
-  const handleSelectSlot = ({ start }) => {
-    setAgendamentoSelecionado(null);
-    setSlotSelecionado(start);
-    setFormModalOpen(true);
-  };
-
-  /** Botão "Editar" dentro do ViewModal → fecha view, abre form em modo edição */
-  const handleEditar = (agendamento) => {
-    setAgendamentoSelecionado(agendamento);
-    setSlotSelecionado(null);
-    setFormModalOpen(true);
-  };
-
-const handleFecharForm = () => {
-  setFormModalOpen(false);
-  setAgendamentoSelecionado(null);
-  setSlotSelecionado(null);
-  dispatch({ type: types.RESET_SUCCESS }); 
-};
   // ── Range change ─────────────────────────────────────────────────────────
   const formatRange = (periodo) => {
     if (Array.isArray(periodo)) {
@@ -83,28 +62,54 @@ const handleFecharForm = () => {
     };
   };
 
+  const handleRangeChange = (periodo) => {
+    const range = formatRange(periodo);
+    currentRangeRef.current = range; // 👈 atualiza a ref
+    dispatch({ type: types.FILTER_AGENDAMENTOS, payload: range });
+  };
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleSelectEvent = (event) => {
+    setAgendamentoSelecionado(event.resource);
+    setViewModalOpen(true);
+  };
+
+  const handleSelectSlot = ({ start }) => {
+    setAgendamentoSelecionado(null);
+    setSlotSelecionado(start);
+    setFormModalOpen(true);
+  };
+
+  const handleEditar = (agendamento) => {
+    setAgendamentoSelecionado(agendamento);
+    setSlotSelecionado(null);
+    setFormModalOpen(true);
+  };
+
+  const handleFecharForm = () => {
+    setFormModalOpen(false);
+    setAgendamentoSelecionado(null);
+    setSlotSelecionado(null);
+    dispatch({ type: types.RESET_SUCCESS });
+  };
+
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="container p-4 overflow-auto">
       <div className="row">
-        <div className=" col-12">
+        <div className="col-12">
 
-          {/* Cabeçalho */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <h1 className="mb-0">Agendamentos</h1>
           </div>
 
-          {/* Calendário */}
           <Calendar
             localizer={localizer}
             events={eventos}
             onSelectEvent={handleSelectEvent}
-            onSelectSlot={handleSelectSlot}   
-            selectable                        
-            onRangeChange={(periodo) => {
-              const { start, end } = formatRange(periodo);
-              dispatch({ type: types.FILTER_AGENDAMENTOS, payload: { start, end } });
-            }}
+            onSelectSlot={handleSelectSlot}
+            selectable
+            onRangeChange={handleRangeChange} // 👈 usando o handler
             defaultView="week"
             min={new Date(1970, 1, 1, 8, 0, 0)}
             max={new Date(1970, 1, 1, 18, 0, 0)}
@@ -117,7 +122,6 @@ const handleFecharForm = () => {
         </div>
       </div>
 
-      {/* Modal de visualização */}
       <AgendamentoViewModal
         open={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
@@ -125,12 +129,12 @@ const handleFecharForm = () => {
         onEditar={handleEditar}
       />
 
-      {/* Modal de criação / edição */}
       <AgendamentoFormModal
         open={formModalOpen}
         onClose={handleFecharForm}
-        agendamento={agendamentoSelecionado}  
+        agendamento={agendamentoSelecionado}
         slotInicial={slotSelecionado}
+        currentRange={currentRangeRef.current} // 👈 passa o range pro modal
       />
     </div>
   );

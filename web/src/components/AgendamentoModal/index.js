@@ -15,9 +15,10 @@ const AgendamentoFormModal = ({
   onClose,
   agendamento = null,
   slotInicial = null,
+  currentRange = null,
 }) => {
   const dispatch = useDispatch();
-  const { loading, error, success } = useSelector((s) => s.agendamento);
+  const { loading, error } = useSelector((s) => s.agendamento); // 👈 sem success
 
   const servicos      = useSelector((s) => s.servico?.lista      || EMPTY);
   const clientes      = useSelector((s) => s.cliente?.data       || EMPTY);
@@ -34,7 +35,7 @@ const AgendamentoFormModal = ({
 
   const [errors, setErrors] = useState({});
 
-  // ✅ 1) Carrega as listas sempre que o modal abre
+  // ── Carrega as listas sempre que o modal abre ────────────────────────────
   useEffect(() => {
     if (open) {
       dispatch({ type: servicoTypes.LIST_SERVICOS_REQUEST });
@@ -43,11 +44,6 @@ const AgendamentoFormModal = ({
       dispatch({ type: horarioTypes.ALL_HORARIOS_REQUEST });
     }
   }, [open, dispatch]);
-
-  // ✅ 2) Fecha o modal apenas quando a operação for bem-sucedida
-  useEffect(() => {
-    if (success && open) onClose();
-  }, [success, open, onClose]);
 
   // ── Preenche formulário ao editar ou ao clicar num slot ──────────────────
   useEffect(() => {
@@ -71,31 +67,26 @@ const AgendamentoFormModal = ({
     setErrors({});
   }, [agendamento, slotInicial, open]);
 
-  // ✅ Filtra colaboradores por especialidade E por horário de trabalho
+  // ── Filtra colaboradores por especialidade E por horário de trabalho ─────
   const colaboradoresFiltrados = useMemo(() => {
     if (!form.servicoId) return [];
 
-    // 1) filtra por especialidade
     const comEspecialidade = colaboradores.filter((c) =>
       c.especialidades?.some(
         (espId) => espId?.toString() === form.servicoId?.toString()
       )
     );
 
-    // 2) se ainda não tem data selecionada, retorna só pelo filtro de especialidade
     if (!form.dataAgendamento) return comEspecialidade;
 
     const data      = moment(form.dataAgendamento);
-    const diaSemana = data.day();          // 0=dom … 6=sáb
+    const diaSemana = data.day();
     const horaSlot  = data.format("HH:mm");
 
-    // 3) filtra pelos que têm horário cadastrado naquele dia e hora
     return comEspecialidade.filter((c) =>
       horarios.some((h) => {
         if (h.colaboradorId !== c._id) return false;
         if (h.diaSemana !== diaSemana)  return false;
-
-        // verifica se o slot está dentro do expediente
         return horaSlot >= h.horaInicio && horaSlot < h.horaFim;
       })
     );
@@ -108,7 +99,6 @@ const AgendamentoFormModal = ({
   const set = (field) => (value) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  // Ao trocar o serviço, limpa o colaborador se ele não for mais válido
   const handleServicoChange = (value) => {
     setForm((prev) => {
       const colaboradorAindaValido = colaboradores
@@ -123,7 +113,6 @@ const AgendamentoFormModal = ({
     });
   };
 
-  // Ao trocar a data, limpa o colaborador se ele não trabalha mais no novo horário
   const handleDataChange = (value) => {
     setForm((prev) => {
       if (!value || !prev.colaboradorId) return { ...prev, dataAgendamento: value };
@@ -167,17 +156,22 @@ const AgendamentoFormModal = ({
     };
 
     if (agendamento) {
-      dispatch({ type: types.UPDATE_AGENDAMENTO, payload: { id: agendamento._id, dados: payload } });
+      dispatch({
+        type: types.UPDATE_AGENDAMENTO,
+        payload: { id: agendamento._id, dados: payload },
+      });
     } else {
-      dispatch({ type: types.CREATE_AGENDAMENTO, payload });
+      dispatch({
+        type: types.CREATE_AGENDAMENTO,
+        payload: { ...payload, range: currentRange, onSuccess: onClose }, // 👈
+      });
     }
   };
 
-  // Placeholder dinâmico do colaborador
   const colaboradorPlaceholder = () => {
-    if (!form.servicoId)                      return "Selecione um serviço primeiro";
-    if (!form.dataAgendamento)                return "Selecione a data primeiro";
-    if (colaboradoresFiltrados.length === 0)  return "Nenhum colaborador disponível nesse horário";
+    if (!form.servicoId)                     return "Selecione um serviço primeiro";
+    if (!form.dataAgendamento)               return "Selecione a data primeiro";
+    if (colaboradoresFiltrados.length === 0) return "Nenhum colaborador disponível nesse horário";
     return "Selecione o colaborador";
   };
 
@@ -203,7 +197,6 @@ const AgendamentoFormModal = ({
         )}
 
         <div className="container-fluid">
-          {/* SERVIÇO */}
           <div className="mb-3">
             <label className="agendamento-label">Serviço</label>
             <SelectPicker
@@ -218,7 +211,6 @@ const AgendamentoFormModal = ({
           </div>
 
           <div className="row">
-            {/* CLIENTE */}
             <div className="col-md-6 mb-3">
               <label className="agendamento-label">Cliente</label>
               <SelectPicker
@@ -232,7 +224,6 @@ const AgendamentoFormModal = ({
               {errors.clienteId && <div className="invalid-feedback d-block">{errors.clienteId}</div>}
             </div>
 
-            {/* DATA — movida para antes do colaborador */}
             <div className="col-md-6 mb-3">
               <label className="agendamento-label">Data e Hora</label>
               <DatePicker
@@ -247,7 +238,6 @@ const AgendamentoFormModal = ({
             </div>
           </div>
 
-          {/* COLABORADOR — filtrado por especialidade + horário */}
           <div className="mb-3">
             <label className="agendamento-label">Colaborador</label>
             <SelectPicker
@@ -262,7 +252,6 @@ const AgendamentoFormModal = ({
             {errors.colaboradorId && <div className="invalid-feedback d-block">{errors.colaboradorId}</div>}
           </div>
 
-          {/* STATUS — só aparece na edição */}
           {agendamento && (
             <div className="mb-3">
               <label className="agendamento-label">Status</label>

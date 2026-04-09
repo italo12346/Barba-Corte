@@ -36,7 +36,7 @@ function* verifyTokenSaga() {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
-      yield put({ type: types.VERIFY_TOKEN_FAILURE, payload: "Sem token" });
+      yield put({ type: types.VERIFY_TOKEN_FAILURE, });
       return;
     }
 

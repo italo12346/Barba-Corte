@@ -92,6 +92,30 @@ export default function horarioReducer(state = INITIAL_STATE, action) {
     case Types.UPDATE_HORARIO_FAILURE:
       return { ...state, loading: false, error: action.payload };
 
+      
+    // ────────────────────────────────────────────────────
+    // EXCLUIR (CORRIGIDO)
+    // ────────────────────────────────────────────────────
+    case Types.DELETE_HORARIO_REQUEST:
+      return { ...state, loading: true, error: null };
+
+    case Types.DELETE_HORARIO_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        /**
+         * CORREÇÃO: Filtramos a lista local removendo todos os eventos 
+         * que possuem o 'horarioId' igual ao ID deletado na API.
+         * Isso garante que a página atualize automaticamente.
+         */
+        listaHorarios: state.listaHorarios.filter(
+          (h) => h.horarioId !== action.payload
+        ),
+      };
+
+    case Types.DELETE_HORARIO_FAILURE:
+      return { ...state, loading: false, error: action.payload };
+
     // ────────────────────────────────────────────────────
     // UI — MODAL
     // ────────────────────────────────────────────────────

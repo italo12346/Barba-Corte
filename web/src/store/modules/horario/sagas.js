@@ -1,6 +1,6 @@
 import moment from "moment-timezone";
-import { call, put, select, takeLatest } from "redux-saga/effects";
-import api from "../../../services/api"; // ajuste o caminho conforme seu projeto
+import { all, call, put, select, takeLatest } from "redux-saga/effects";
+import api from "../../../services/api"; 
 import Types from "./types";
 
 const TZ = "America/Sao_Paulo";
@@ -9,19 +9,11 @@ const TZ = "America/Sao_Paulo";
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Converte um horário da API em eventos do BigCalendar.
- *
- * - start/end são guardados como ISO string no Redux (serializável)
- *   e convertidos para Date apenas no useMemo do componente.
- * - nomeColaborador é opcional: se fornecido, aparece no title do evento.
- *
- * Ex.: diasSemana=[1,3], horaInicio="08:30", horaFim="15:30"
- *   → gera dois eventos: segunda-feira 08:30-15:30 e quarta-feira 08:30-15:30
- *     da semana atual.
- */
 function horarioToEvents(horario, nomeColaborador = "") {
-  const { diasSemana, horaInicio, horaFim, colaboradorId } = horario;
+  const diasSemana = Array.isArray(horario.diasSemana) ? horario.diasSemana : [];
+  const { horaInicio, horaFim, colaboradorId } = horario;
+  
+  const id = horario.id || horario._id;
 
   return diasSemana.map((dia) => {
     const base = moment.tz(TZ).startOf("week").day(dia);
@@ -29,7 +21,6 @@ function horarioToEvents(horario, nomeColaborador = "") {
     const [hIni, mIni] = horaInicio.split(":").map(Number);
     const [hFim, mFim] = horaFim.split(":").map(Number);
 
-    // ✅ ISO string → serializável no Redux, sem warnings
     const start = base.clone().hours(hIni).minutes(mIni).seconds(0).toISOString();
     const end   = base.clone().hours(hFim).minutes(mFim).seconds(0).toISOString();
 
@@ -38,15 +29,16 @@ function horarioToEvents(horario, nomeColaborador = "") {
       : `${horaInicio}–${horaFim}`;
 
     return {
-      id: `${horario.id}_dia${dia}`,
-      horarioId: horario.id,
+      id: `${id}_dia${dia}`,
+      horarioId: id,
       colaboradorId,
+      colaboradorNome: nomeColaborador,
       diaSemana: dia,
       horaInicio,
       horaFim,
       title,
-      start,  // ISO string
-      end,    // ISO string
+      start,
+      end,
     };
   });
 }
@@ -55,17 +47,21 @@ function horarioToEvents(horario, nomeColaborador = "") {
 // LISTAR HORÁRIOS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function* allHorariosSaga() {  // ← sem { payload }
+function* allHorariosSaga() {
   try {
-    const { data } = yield call(api.get, "/horario");  // ← sem params
+    const { data } = yield call(api.get, "/horario");
 
     const listaColaboradores = yield select(
-      (state) => state.colaborador?.lista ?? []
+      (state) => 
+        state.colaborador?.lista || 
+        state.colaboradores?.lista || 
+        []
     );
 
     const eventos = (data.horarios || []).flatMap((horario) => {
+      const cId = horario.colaboradorId?._id || horario.colaboradorId;
       const colaborador = listaColaboradores.find(
-        (c) => c._id === String(horario.colaboradorId)
+        (c) => String(c._id) === String(cId)
       );
       return horarioToEvents(horario, colaborador?.nome || "");
     });
@@ -83,77 +79,69 @@ function* allHorariosSaga() {  // ← sem { payload }
 
 function* createHorarioSaga({ payload }) {
   try {
-    const { salaoId, colaboradorId, diasSemana, horaInicio, horaFim } = payload;
+    const { data } = yield call(api.post, "/horario", payload);
 
-    const { data } = yield call(api.post, "/horario", {
-      salaoId,
-      colaboradorId,
-      diasSemana,
-      horaInicio,
-      horaFim,
-    });
-
-    // Busca nome do colaborador para o title do evento
     const listaColaboradores = yield select(
-      (state) =>
-        state.colaboradores?.listaColaboradores ??
-        state.colaboradores?.colaboradores ??
-        state.colaboradores?.data ??
-        []
+      (state) => state.colaborador?.lista || []
     );
-    const colaborador = listaColaboradores.find((c) => c._id === colaboradorId);
-    const nome = colaborador?.nome || "";
+    
+    const cId = data.horario.colaboradorId?._id || data.horario.colaboradorId;
+    const colaborador = listaColaboradores.find((c) => String(c._id) === String(cId));
+    
+    const novosEventos = horarioToEvents(data.horario, colaborador?.nome || "");
 
-    const novosEventos = horarioToEvents(data.horario, nome);
-
-    yield put({ type: Types.CREATE_HORARIO_SUCCESS, payload: novosEventos });
+    const listaAtual = yield select((state) => state.horario.listaHorarios || []);
+    
+    yield put({ 
+      type: Types.CREATE_HORARIO_SUCCESS, 
+      payload: [...listaAtual, ...novosEventos] 
+    });
+    
+    alert("Horário cadastrado com sucesso!");
   } catch (err) {
-    const msg =
-      err?.response?.data?.message || "Erro ao cadastrar horário";
+    const msg = err?.response?.data?.message || "Erro ao cadastrar horário";
     yield put({ type: Types.CREATE_HORARIO_FAILURE, payload: msg });
+    alert(msg);
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ATUALIZAR HORÁRIO  (pronto para quando a API tiver PUT /horario/:id)
+// EXCLUIR HORÁRIO (CORRIGIDO)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function* updateHorarioSaga({ payload }) {
+function* deleteHorarioSaga({ payload: horarioId }) {
   try {
-    const { horarioId, salaoId, colaboradorId, diasSemana, horaInicio, horaFim } =
-      payload;
+    /**
+     * GARANTIA EXTRA: O ID do horário não pode conter o sufixo do calendário (_diaX).
+     * Se ele contiver, removemos para enviar apenas o ObjectId puro para a API.
+     */
+    let id = typeof horarioId === 'string' ? horarioId : (horarioId.id || horarioId._id || horarioId.horarioId);
+    
+    if (id && id.includes("_dia")) {
+        id = id.split("_dia")[0];
+    }
 
-    const { data } = yield call(api.put, `/horario/${horarioId}`, {
-      salaoId,
-      colaboradorId,
-      diasSemana,
-      horaInicio,
-      horaFim,
+    if (!id || typeof id !== 'string') {
+        throw new Error("ID de horário inválido para exclusão");
+    }
+
+    // Chamada para a API deletar (enviando apenas a string do ID na URL)
+    yield call(api.delete, `/horario/${id}`);
+
+    /**
+     * CORREÇÃO: Enviamos apenas o ID puro para o Reducer.
+     * O Reducer agora é responsável por filtrar a lista local.
+     */
+    yield put({ 
+      type: Types.DELETE_HORARIO_SUCCESS, 
+      payload: id 
     });
-
-    const listaColaboradores = yield select(
-      (state) =>
-        state.colaboradores?.listaColaboradores ??
-        state.colaboradores?.colaboradores ??
-        state.colaboradores?.data ??
-        []
-    );
-    const colaborador = listaColaboradores.find((c) => c._id === colaboradorId);
-    const nome = colaborador?.nome || "";
-
-    // Remove os eventos antigos desse horário e insere os novos
-    const listaAtual = yield select((state) => state.horario.listaHorarios);
-    const semAntigos = listaAtual.filter((e) => e.horarioId !== horarioId);
-    const novosEventos = horarioToEvents(data.horario, nome);
-
-    yield put({
-      type: Types.UPDATE_HORARIO_SUCCESS,
-      payload: [...semAntigos, ...novosEventos],
-    });
+    
+    alert("Horário removido com sucesso!");
   } catch (err) {
-    const msg =
-      err?.response?.data?.message || "Erro ao atualizar horário";
-    yield put({ type: Types.UPDATE_HORARIO_FAILURE, payload: msg });
+    const msg = err?.response?.data?.message || err.message || "Erro ao excluir horário";
+    yield put({ type: Types.DELETE_HORARIO_FAILURE, payload: msg });
+    alert(msg);
   }
 }
 
@@ -162,7 +150,9 @@ function* updateHorarioSaga({ payload }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function* horarioSagas() {
-  yield takeLatest(Types.ALL_HORARIOS_REQUEST,    allHorariosSaga);
-  yield takeLatest(Types.CREATE_HORARIO_REQUEST,  createHorarioSaga);
-  yield takeLatest(Types.UPDATE_HORARIO_REQUEST,  updateHorarioSaga);
+  yield all([
+    takeLatest(Types.ALL_HORARIOS_REQUEST,    allHorariosSaga),
+    takeLatest(Types.CREATE_HORARIO_REQUEST,  createHorarioSaga),
+    takeLatest(Types.DELETE_HORARIO_REQUEST,  deleteHorarioSaga),
+  ]);
 }
