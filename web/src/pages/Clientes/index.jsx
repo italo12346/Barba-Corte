@@ -46,7 +46,6 @@ const Clientes = () => {
     } else {
       dispatch(actions.createCliente(form));
     }
-    // ✅ Não fecha aqui — espera o useEffect acima detectar sucesso
   };
 
   return (

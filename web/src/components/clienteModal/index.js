@@ -2,7 +2,7 @@ import { Modal, Button, Form, DatePicker, SelectPicker } from "rsuite";
 import { useEffect, useMemo } from "react";
 import { formatarTelefone } from "../../util/functionAux";
 
-export default function ClienteModal({ open, onClose, form, setForm, salvar }) {
+export default function ClienteModal({ open, onClose, form, setForm, salvar, loading, error }) {
   const initialState = useMemo(() => ({
     nome: "",
     email: "",
@@ -18,12 +18,19 @@ export default function ClienteModal({ open, onClose, form, setForm, salvar }) {
     },
   }), []);
 
-
   useEffect(() => {
     if (!open) return;
 
     if (!form?._id) {
+      // NOVO cliente — reseta o form
       setForm(initialState);
+    } else {
+      // EDIÇÃO — preenche o fotoPreview com a URL da foto já salva
+      setForm((prev) => ({
+        ...prev,
+        fotoFile: null,
+        fotoPreview: prev.foto || null,
+      }));
     }
   }, [open, form?._id, setForm, initialState]);
 
@@ -87,6 +94,27 @@ export default function ClienteModal({ open, onClose, form, setForm, salvar }) {
       </Modal.Header>
 
       <Modal.Body style={{ padding: 25 }}>
+        {/* EXIBIÇÃO DE ERRO */}
+        {error && (
+          <div
+            style={{
+              background: "#fff2f0",
+              border: "1px solid #ffccc7",
+              borderRadius: 6,
+              padding: "10px 14px",
+              marginBottom: 16,
+              color: "#cf1322",
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span className="mdi mdi-alert-circle-outline" style={{ fontSize: 16 }} />
+            {error}
+          </div>
+        )}
+
         <Form fluid>
           {/* FOTO */}
           <Form.Group style={{ textAlign: "center", marginBottom: 25 }}>
@@ -274,7 +302,7 @@ export default function ClienteModal({ open, onClose, form, setForm, salvar }) {
           Cancelar
         </Button>
 
-        <Button className="btn" onClick={salvar}>
+        <Button className="btn" onClick={salvar} loading={loading} disabled={loading}>
           Salvar Cliente
         </Button>
       </Modal.Footer>
