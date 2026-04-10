@@ -128,6 +128,7 @@ export default function Colaboradores() {
           <div className="card-body p-0">
             <Table
               width={"100%"}
+              autoHeight
               data={lista}
               loading={loading}
               rowKey="id"

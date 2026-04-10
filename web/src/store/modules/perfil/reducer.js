@@ -1,4 +1,4 @@
-import types from "../auth/authTypes";
+import types from "./types";
 
 const token = localStorage.getItem("token");
 

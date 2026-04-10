@@ -52,6 +52,7 @@ function* verifyTokenSaga() {
 
 function* logoutSaga() {
   localStorage.removeItem("token");
+  sessionStorage.removeItem("profileLoaded");
   delete api.defaults.headers.common["Authorization"];
   yield put({ type: types.LOGOUT_SUCCESS });
 }

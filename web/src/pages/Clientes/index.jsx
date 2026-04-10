@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Table, Button } from "rsuite";
 import "rsuite/dist/rsuite.min.css";
@@ -15,49 +15,45 @@ const Clientes = () => {
   const {
     data = [],
     loading = false,
+    error = null,
     agendamentos = [],
     loadingAgendamentos = false,
   } = useSelector((state) => state.cliente);
 
-  // ===============================
-  // MODAL VISUALIZAR
-  // ===============================
   const [viewOpen, setViewOpen] = useState(false);
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
-
-  // ===============================
-  // MODAL CREATE / EDIT
-  // ===============================
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState({});
 
-  // ===============================
-  // INIT
-  // ===============================
+  // Controla se estava salvando para detectar sucesso
+  const wasLoading = useRef(false);
+
   useEffect(() => {
     dispatch(actions.getClientes());
   }, [dispatch]);
 
-  // ===============================
-  // SALVAR CLIENTE
-  // ===============================
+  // Fecha o modal automaticamente quando salvar com sucesso
+  useEffect(() => {
+    if (wasLoading.current && !loading && !error && formOpen) {
+      setFormOpen(false);
+    }
+    wasLoading.current = loading;
+  }, [loading, error, formOpen]);
+
   const salvar = () => {
     if (form._id) {
       dispatch(actions.updateCliente(form));
     } else {
       dispatch(actions.createCliente(form));
     }
-
-    setFormOpen(false);
+    // ✅ Não fecha aqui — espera o useEffect acima detectar sucesso
   };
 
   return (
     <div className="container p-4">
       <div className="container-cliente">
-        {/* HEADER */}
         <div className="w-100 d-flex justify-content-between align-items-center mb-4">
           <h1>Clientes</h1>
-
           <Button
             className="btn"
             onClick={() => {
@@ -69,7 +65,6 @@ const Clientes = () => {
           </Button>
         </div>
 
-        {/* TABELA */}
         <div className="card-table">
           <div className="card-body p-0">
             <Table
@@ -107,7 +102,6 @@ const Clientes = () => {
                 <Cell>
                   {(row) => (
                     <div className="actions d-flex gap-2">
-                      {/* 👁️ VISUALIZAR */}
                       <Button
                         appearance="subtle"
                         size="sm"
@@ -120,7 +114,6 @@ const Clientes = () => {
                         <span className="mdi mdi-eye" />
                       </Button>
 
-                      {/* ✏️ EDITAR */}
                       <Button
                         appearance="subtle"
                         size="sm"
@@ -132,17 +125,12 @@ const Clientes = () => {
                         <span className="mdi mdi-pencil" />
                       </Button>
 
-                      {/* 🗑️ EXCLUIR */}
                       <Button
                         appearance="subtle"
                         size="sm"
                         color="red"
                         onClick={() => {
-                          if (
-                            window.confirm(
-                              "Deseja realmente excluir este cliente?",
-                            )
-                          ) {    
+                          if (window.confirm("Deseja realmente excluir este cliente?")) {
                             dispatch(actions.deleteCliente(row.vinculoId));
                           }
                         }}
@@ -158,9 +146,6 @@ const Clientes = () => {
         </div>
       </div>
 
-      {/* ===============================
-          MODAL VISUALIZAR
-      =============================== */}
       <ClienteViewModal
         open={viewOpen}
         onClose={() => setViewOpen(false)}
@@ -169,15 +154,14 @@ const Clientes = () => {
         loading={loadingAgendamentos}
       />
 
-      {/* ===============================
-          MODAL CREATE / EDIT
-      =============================== */}
       <ClienteModal
         open={formOpen}
         onClose={() => setFormOpen(false)}
         form={form}
         setForm={setForm}
         salvar={salvar}
+        loading={loading}
+        error={error}
       />
     </div>
   );

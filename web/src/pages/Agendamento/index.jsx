@@ -92,7 +92,12 @@ const Agendamento = () => {
     setSlotSelecionado(null);
     dispatch({ type: types.RESET_SUCCESS });
   };
-
+useEffect(() => {
+  if (!sessionStorage.getItem("profileLoaded")) {
+    sessionStorage.setItem("profileLoaded", "true");
+    window.location.reload();
+  }
+}, []);
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="container p-4 overflow-auto">
