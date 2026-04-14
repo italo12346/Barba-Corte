@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "rsuite";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from '@react-oauth/google'; // ✅ Importação do Google
 import types from "../../store/modules/auth/authTypes";
 import logo from '../../assets/Barba&cortedark.png';
 import "./login.css";
@@ -25,6 +26,14 @@ const Login = () => {
     e.preventDefault();
     // ✅ dispara o type diretamente, sem depender de actions.js externo
     dispatch({ type: types.LOGIN_REQUEST, payload: { email: form.email, senha: form.senha } });
+  };
+
+  // ✅ Sucesso no Google: Dispara a Saga com o Token
+  const handleGoogleSuccess = (credentialResponse) => {
+    dispatch({ 
+      type: types.GOOGLE_LOGIN_REQUEST, 
+      payload: { token: credentialResponse.credential } 
+    });
   };
 
   useEffect(() => {
@@ -80,6 +89,23 @@ const Login = () => {
           >
             Entrar
           </Button>
+
+          {/* ✅ Divisor Visual */}
+          <div style={{ margin: '20px 0', textAlign: 'center', borderBottom: '1px solid #ddd', lineHeight: '0.1em' }}>
+            <span style={{ background: '#fff', padding: '0 10px', color: '#999', fontSize: '12px' }}>ou</span>
+          </div>
+
+          {/* ✅ Botão do Google */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log('Erro no Login Google')}
+              useOneTap
+              theme="filled_blue"
+              shape="pill"
+              locale="pt_BR"
+            />
+          </div>
 
           <p className="voltar-login">
             Não tem conta?{" "}
