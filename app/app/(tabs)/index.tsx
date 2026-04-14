@@ -1,98 +1,178 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { 
+  View, Text, StyleSheet, Image, ActivityIndicator, 
+  TouchableOpacity, ScrollView, RefreshControl, SafeAreaView 
+} from 'react-native';
+import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import api from '../../services/api';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// ✅ 1. Definir a interface para o TypeScript entender o seu Schema
+interface Salao {
+  _id: string;
+  nome: string;
+  foto?: string;
+  capa?: string;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    cidade: string;
+    uf: string;
+  };
+}
 
-export default function HomeScreen() {
+export default function Home() {
+  const router = useRouter();
+  
+  // ✅ 2. Tipar o estado como um array de Salao
+  const [saloes, setSaloes] = useState<Salao[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  // ✅ 3. Tipar o erro como string ou null
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const loadSaloes = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permissão de localização negada');
+        setLoading(false);
+        return;
+      }
+
+      let userLocation = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = userLocation.coords;
+
+      const { data } = await api.get(`/salao?lat=${latitude}&lon=${longitude}`);
+
+      if (!data.error) {
+        setSaloes(data.saloes);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar salões:", error);
+      setErrorMsg('Erro ao conectar com o servidor');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSaloes();
+  }, []);
+
+  if (loading) return (
+    <View style={styles.centerContainer}>
+      <ActivityIndicator size="large" color="#6b21a8" />
+      <Text style={styles.loadingText}>Buscando barbearias próximas...</Text>
+    </View>
+  );
+
+  if (errorMsg) return (
+    <View style={styles.centerContainer}>
+      <MaterialIcons name="error-outline" size={48} color="#ff4444" />
+      <Text style={styles.errorText}>{errorMsg}</Text>
+      <TouchableOpacity style={styles.retryBtn} onPress={() => {setLoading(true); loadSaloes();}}>
+        <Text style={styles.retryBtnText}>Tentar Novamente</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView 
+        style={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {setRefreshing(true); loadSaloes();}} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.addressLabel}>Sua Localização</Text>
+          <View style={styles.addressRow}>
+            <MaterialIcons name="location-on" size={18} color="#6b21a8" />
+            <Text style={styles.addressText} numberOfLines={1}>📍 Localização Atual (GPS)</Text>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {saloes.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>O Mais Próximo de Você 📍</Text>
+            <TouchableOpacity 
+              style={styles.cardDestaque}
+              // ✅ 4. Ajuste na navegação (usando 'as any' se o router reclamar da rota dinâmica)
+              onPress={() => router.push(`/(tabs)/salao/${saloes[0]._id}` as any)}
+            >
+              <Image 
+                source={{ uri: saloes[0].capa || 'https://via.placeholder.com/400x200' }} 
+                style={styles.fotoDestaque} 
+              />
+              <View style={styles.infoDestaque}>
+                <Text style={styles.nomeDestaque}>{saloes[0].nome}</Text>
+                <View style={styles.badgeDistancia}>
+                  <MaterialIcons name="directions-walk" size={14} color="#6b21a8" />
+                  <Text style={styles.distanciaText}>Destaque por proximidade</Text>
+                </View>
+                <Text style={styles.enderecoText}>
+                  {saloes[0].endereco.logradouro}, {saloes[0].endereco.numero}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+         )}
+
+        <Text style={styles.sectionTitle}>Explorar Barbearias</Text>
+        {saloes.map((item, index) => (
+          <TouchableOpacity 
+            key={item._id} 
+            style={styles.cardComum}
+            onPress={() => router.push(`/(tabs)/salao/${item._id}` as any)}
+          >
+            <Image 
+              source={{ uri: item.foto || 'https://via.placeholder.com/100' }} 
+              style={styles.fotoComum} 
+            />
+            <View style={styles.infoComum}>
+              <Text style={styles.nomeComum}>{item.nome}</Text>
+              <Text style={styles.subText}>
+                {item.endereco.cidade} • {item.endereco.uf}
+              </Text>
+              <Text style={styles.distanciaSubText}>📍 {index === 0 ? 'Mais próximo' : 'Disponível para agendamento'}</Text>
+            </View>
+            <MaterialIcons name="chevron-right" size={24} color="#CCC" />
+          </TouchableOpacity>
+         ))}
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  safeArea: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  loadingText: { marginTop: 10, color: '#666', fontWeight: '500' },
+  errorText: { marginTop: 10, color: '#ff4444', textAlign: 'center', fontSize: 16 },
+  retryBtn: { marginTop: 20, backgroundColor: '#6b21a8', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  retryBtnText: { color: '#FFF', fontWeight: 'bold' },
+  header: { padding: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  addressLabel: { fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  addressText: { fontSize: 14, fontWeight: 'bold', marginLeft: 4, color: '#333' },
+  section: { padding: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginHorizontal: 20, marginBottom: 15, color: '#1a0a2e', marginTop: 10 },
+  cardDestaque: { backgroundColor: '#FFF', borderRadius: 16, elevation: 8, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, overflow: 'hidden' },
+  fotoDestaque: { width: '100%', height: 180 },
+  infoDestaque: { padding: 15 },
+  nomeDestaque: { fontSize: 22, fontWeight: 'bold', color: '#1a0a2e' },
+  badgeDistancia: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3e8ff', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginTop: 8 },
+  distanciaText: { color: '#6b21a8', fontWeight: 'bold', fontSize: 12, marginLeft: 4 },
+  enderecoText: { color: '#777', fontSize: 13, marginTop: 10 },
+  cardComum: { flexDirection: 'row', padding: 15, marginHorizontal: 20, backgroundColor: '#FFF', borderRadius: 14, marginBottom: 12, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F8F8F8' },
+  fotoComum: { width: 65, height: 65, borderRadius: 12 },
+  infoComum: { flex: 1, marginLeft: 15 },
+  nomeComum: { fontSize: 17, fontWeight: 'bold', color: '#333' },
+  subText: { color: '#888', fontSize: 13, marginTop: 2 },
+  distanciaSubText: { color: '#6b21a8', fontSize: 12, fontWeight: '600', marginTop: 4 }
 });
