@@ -8,8 +8,6 @@ const Cliente = require("../models/cliente");
 const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
 const JWT_EXPIRES = process.env.JWT_EXPIRES || "7d";
 
-const { OAuth2Client } = require("google-auth-library");
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /* ===============================
    REGISTRO
 =============================== */
@@ -194,30 +192,40 @@ router.post("/google", async (req, res) => {
         .json({ error: true, message: "Token não informado" });
     }
 
-    // ── Busca dados do usuário no Google ─────────────────────────────────
+    // ── Busca dados do usuário no Google via userinfo ─────────────────────
     const googleRes = await fetch(
-      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`
     );
 
     if (!googleRes.ok) {
+      const errBody = await googleRes.text();
+      console.error("Erro Google userinfo:", errBody);
       return res
         .status(401)
-        .json({ error: true, message: "Token Google inválido" });
+        .json({ error: true, message: "Token Google inválido ou expirado" });
     }
 
     const { sub: googleId, email, name, picture } = await googleRes.json();
+
+    if (!email) {
+      return res
+        .status(401)
+        .json({ error: true, message: "Não foi possível obter o e-mail do Google" });
+    }
 
     // ── Busca ou cria o cliente ──────────────────────────────────────────
     let cliente = await Cliente.findOne({ email });
 
     if (!cliente) {
+      // Verifica se já existe um documento GOOGLE com esse googleId
+      const docNumero = `GOOGLE_${googleId}`;
       cliente = await new Cliente({
-        nome: name,
+        nome:     name,
         email,
-        senha: await bcrypt.hash(googleId, 10),
-        foto: picture || null,
-        status: "ATIVO",
-        documento: { tipo: "CPF", numero: `GOOGLE_${googleId}` },
+        senha:    await bcrypt.hash(googleId, 10), // senha inutilizável (login só via Google)
+        foto:     picture || null,
+        status:   "ATIVO",
+        documento: { tipo: "CPF", numero: docNumero },
       }).save();
     }
 
@@ -231,25 +239,23 @@ router.post("/google", async (req, res) => {
     const token_jwt = jwt.sign(
       { id: cliente._id, tipo: "cliente" },
       JWT_SECRET,
-      {
-        expiresIn: JWT_EXPIRES,
-      },
+      { expiresIn: JWT_EXPIRES }
     );
 
     return res.json({
       error: false,
       token: token_jwt,
       cliente: {
-        _id: cliente._id,
-        nome: cliente.nome,
-        email: cliente.email,
-        foto: cliente.foto || null,
-        telefone: cliente.telefone || null,
+        _id:            cliente._id,
+        nome:           cliente.nome,
+        email:          cliente.email,
+        foto:           cliente.foto || null,
+        telefone:       cliente.telefone || null,
         dataNascimento: cliente.dataNascimento || null,
-        sexo: cliente.sexo || null,
-        documento: cliente.documento,
-        endereco: cliente.endereco || null,
-        status: cliente.status,
+        sexo:           cliente.sexo || null,
+        documento:      cliente.documento,
+        endereco:       cliente.endereco || null,
+        status:         cliente.status,
       },
     });
   } catch (err) {

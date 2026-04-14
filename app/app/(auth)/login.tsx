@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Google from 'expo-auth-session/providers/google';
+import { ResponseType } from 'expo-auth-session';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect, useState } from 'react';
@@ -35,13 +36,16 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId:     WEB_CLIENT_ID,
     androidClientId: ANDROID_CLIENT_ID,
-  
+    responseType:    ResponseType.Token, // ✅ garante que accessToken vem no response
+    scopes:          ['openid', 'profile', 'email'],
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
-      const token = response.authentication?.accessToken;
+      // ✅ accessToken — usado para buscar dados na /oauth2/v3/userinfo no backend
+      const token = response.authentication?.accessToken ?? response.params?.access_token;
       if (!token) return;
+
       dispatch(loginGoogle(token)).then((result) => {
         if (loginGoogle.fulfilled.match(result)) {
           router.replace('/(tabs)');

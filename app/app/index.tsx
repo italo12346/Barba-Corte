@@ -21,8 +21,8 @@ export default function Index() {
   }
 
   return isAuthenticated
-    ? <Redirect href="/(tabs)" />
-    : <Redirect href="/(auth)/login" />;
+  ? <Redirect href="/(tabs)" />
+  : <Redirect href="/(auth)/login" />;
 }
 
 const styles = StyleSheet.create({

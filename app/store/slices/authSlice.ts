@@ -31,10 +31,10 @@ export interface Cliente {
 }
 
 interface AuthState {
-  cliente:       Cliente | null;
-  token:         string | null;
-  loading:       boolean;
-  error:         string | null;
+  cliente:         Cliente | null;
+  token:           string | null;
+  loading:         boolean;
+  error:           string | null;
   isAuthenticated: boolean;
 }
 
@@ -46,14 +46,14 @@ interface LoginPayload {
 }
 
 interface RegisterPayload {
-  nome:           string;
-  email:          string;
-  senha:          string;
-  telefone?:      string;
+  nome:            string;
+  email:           string;
+  senha:           string;
+  telefone?:       string;
   dataNascimento?: string;
-  sexo?:          'M' | 'F' | 'O';
-  documento:      Documento;
-  endereco?:      Endereco;
+  sexo?:           'M' | 'F' | 'O';
+  documento:       Documento;
+  endereco?:       Endereco;
 }
 
 // ── Initial State ─────────────────────────────────────────────────────────────
@@ -75,10 +75,7 @@ export const loginCliente = createAsyncThunk(
     try {
       const { data } = await api.post('/auth/cliente/login', credentials);
       if (data.error) throw new Error(data.message);
-
-      // 👈 persiste o token para uso futuro (ex: rehydrate no startup)
       await AsyncStorage.setItem('@token', data.token);
-
       return { token: data.token, cliente: data.cliente };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -93,9 +90,7 @@ export const registerCliente = createAsyncThunk(
     try {
       const { data } = await api.post('/auth/cliente/register', payload);
       if (data.error) throw new Error(data.message);
-
       await AsyncStorage.setItem('@token', data.token);
-
       return { token: data.token, cliente: data.cliente };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -116,15 +111,15 @@ export const loadClienteFromToken = createAsyncThunk(
       });
 
       if (data.error) throw new Error(data.message);
-
       return { token, cliente: data.cliente };
     } catch (error: any) {
-      await AsyncStorage.removeItem('@token'); // 👈 limpa token inválido
+      await AsyncStorage.removeItem('@token');
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
-/** POST /auth/cliente/google */
+
+/** POST /auth/cliente/google — envia accessToken para busca na userinfo do Google */
 export const loginGoogle = createAsyncThunk(
   'auth/google',
   async (accessToken: string, { rejectWithValue }) => {
@@ -150,29 +145,31 @@ const authSlice = createSlice({
       state.token           = null;
       state.isAuthenticated = false;
       state.error           = null;
-      AsyncStorage.removeItem('@token'); // 👈 limpa storage no logout
+      AsyncStorage.removeItem('@token');
     },
     clearError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-// ── google ────────────────────────────────────────────────────────────
-builder
-  .addCase(loginGoogle.pending, (state) => {
-    state.loading = true;
-    state.error   = null;
-  })
-  .addCase(loginGoogle.fulfilled, (state, action) => {
-    state.loading         = false;
-    state.token           = action.payload.token;
-    state.cliente         = action.payload.cliente;
-    state.isAuthenticated = true;
-  })
-  .addCase(loginGoogle.rejected, (state, action) => {
-    state.loading = false;
-    state.error   = action.payload as string;
-  });
+
+    // ── google ────────────────────────────────────────────────────────────
+    builder
+      .addCase(loginGoogle.pending, (state) => {
+        state.loading = true;
+        state.error   = null;
+      })
+      .addCase(loginGoogle.fulfilled, (state, action) => {
+        state.loading         = false;
+        state.token           = action.payload.token;
+        state.cliente         = action.payload.cliente;
+        state.isAuthenticated = true;
+      })
+      .addCase(loginGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.error   = action.payload as string;
+      });
+
     // ── login ────────────────────────────────────────────────────────────
     builder
       .addCase(loginCliente.pending, (state) => {
