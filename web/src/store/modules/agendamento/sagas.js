@@ -34,13 +34,16 @@ function* filterAgendamentosSaga({ payload }) {
 
 function* createAgendamentoSaga({ payload }) {
   try {
-    const { data } = yield call(agendamentoService.create, payload); // ✅ sem salaoId
+    const { range, onSuccess, ...dados } = payload; // 👈 extrai ANTES de chamar o serviço
 
-    yield put({
-      type: types.CREATE_AGENDAMENTO_SUCCESS,
-      payload: data.agendamento,
-    });
+    const { data } = yield call(agendamentoService.create, dados); // ✅ só os dados
+
+    yield put({ type: types.CREATE_AGENDAMENTO_SUCCESS, payload: data.agendamento });
+    yield put({ type: types.FILTER_AGENDAMENTOS, payload: range });
+
     toast.success("Agendamento criado com sucesso!");
+
+    if (onSuccess) yield call(onSuccess); // 👈 fecha o modal por último
   } catch (err) {
     const msg = err?.response?.data?.message || "Erro ao criar agendamento";
     yield put({ type: types.CREATE_AGENDAMENTO_FAILURE, payload: msg });

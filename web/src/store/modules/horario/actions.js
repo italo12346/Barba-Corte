@@ -13,6 +13,13 @@ export const allHorarios = (salaoId, filtros = {}) => ({
   type: Types.ALL_HORARIOS_REQUEST,
   payload: { salaoId, ...filtros },
 });
+export function deleteHorario(horarioId) {
+  const id =
+    typeof horarioId === "object"
+      ? horarioId.id || horarioId._id || horarioId.horarioId
+      : horarioId;
+  return { type: Types.DELETE_HORARIO_REQUEST, payload: id };
+}
 
 // ─────────────────────────────────────────────────────────
 // CRIAR

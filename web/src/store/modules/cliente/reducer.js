@@ -33,6 +33,7 @@ export default function cliente(state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: true,
+        error: null,
       };
 
     case types.GET_CLIENTES_SUCCESS:
@@ -46,7 +47,7 @@ export default function cliente(state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: false,
-        error: action.error,
+        error: action.payload,
       };
 
     /* =====================================================
@@ -63,38 +64,38 @@ export default function cliente(state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: false,
-        form: INITIAL_STATE.form, // 🔥 limpa form
+        form: INITIAL_STATE.form,
       };
 
     case types.CREATE_CLIENTE_FAILURE:
       return {
         ...state,
         loading: false,
-        error: action.error,
+        error: action.payload,
       };
 
     /* =====================================================
        ATUALIZAR CLIENTE
     ===================================================== */
-    case types.UPDATE_CLIENTE_REQUEST:
+    case types.EDIT_CLIENTE_REQUEST:
       return {
         ...state,
         loading: true,
         error: null,
       };
 
-    case types.UPDATE_CLIENTE_SUCCESS:
+    case types.EDIT_CLIENTE_SUCCESS:
       return {
         ...state,
         loading: false,
         form: INITIAL_STATE.form,
       };
 
-    case types.UPDATE_CLIENTE_FAILURE:
+    case types.EDIT_CLIENTE_FAILURE:
       return {
         ...state,
         loading: false,
-        error: action.error,
+        error: action.payload,
       };
 
     /* =====================================================
@@ -104,6 +105,7 @@ export default function cliente(state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: true,
+        error: null,
       };
 
     case types.DELETE_CLIENTE_SUCCESS:
@@ -116,11 +118,11 @@ export default function cliente(state = INITIAL_STATE, action) {
       return {
         ...state,
         loading: false,
-        error: action.error,
+        error: action.payload,
       };
 
     /* =====================================================
-       SET FORM (EDITAR)
+       SET FORM (EDITAR CLIENTE)
     ===================================================== */
     case types.SET_CLIENTE_FORM:
       return {
@@ -128,7 +130,7 @@ export default function cliente(state = INITIAL_STATE, action) {
         form: {
           ...action.payload,
 
-          // 🔥 garante estrutura correta
+          // garante estrutura consistente
           fotoFile: null,
           fotoPreview: action.payload?.foto || null,
 

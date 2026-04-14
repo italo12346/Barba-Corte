@@ -36,7 +36,7 @@ function* verifyTokenSaga() {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
-      yield put({ type: types.VERIFY_TOKEN_FAILURE, payload: "Sem token" });
+      yield put({ type: types.VERIFY_TOKEN_FAILURE, });
       return;
     }
 
@@ -52,6 +52,7 @@ function* verifyTokenSaga() {
 
 function* logoutSaga() {
   localStorage.removeItem("token");
+  sessionStorage.removeItem("profileLoaded");
   delete api.defaults.headers.common["Authorization"];
   yield put({ type: types.LOGOUT_SUCCESS });
 }

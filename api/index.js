@@ -18,6 +18,7 @@ const clienteRoutes = require("./src/routes/cliente.routes");
 const authRoutes = require("./src/routes/auth.routes");
 const app = express();
 const authMiddleware = require("./src/middleware/authMiddleware");
+const authClienteRoutes = require("./src/routes/authCliente.routes");
 
 // Middlewares
 app.use(morgan("dev"));
@@ -29,6 +30,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 🔓 Rotas públicas
 app.use("/auth", authRoutes);
+app.use("/auth/cliente", authClienteRoutes);
 app.use("/webhook", webhook); // geralmente webhook não usa auth
 
 // 🔐 Rotas protegidas (TODAS usam token)
