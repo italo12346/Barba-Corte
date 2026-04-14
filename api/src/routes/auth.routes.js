@@ -4,6 +4,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
 
+
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 const Salao = require("../models/salao");
 
 const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
@@ -139,6 +143,33 @@ router.get("/me", async (req, res) => {
     res
       .status(401)
       .json({ error: true, message: "Token inválido ou expirado" });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    // Valida o token com o Google
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const { email, name, picture } = ticket.getPayload();
+
+    // Busca ou cria o usuário no banco
+    let salao = await Salao.findOne({ email });
+    if (!salao) {
+      salao = await Salao.create({ email, nome: name, foto: picture });
+    }
+
+    // Gera seu JWT normal
+    const jwtToken = jwt.sign({ id: salao._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    res.json({ token: jwtToken, salao });
+  } catch (err) {
+    res.status(401).json({ message: 'Token Google inválido' });
   }
 });
 

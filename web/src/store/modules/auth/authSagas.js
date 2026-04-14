@@ -81,6 +81,6 @@ export default function* authSaga() {
   yield takeLatest(types.REGISTER_REQUEST,     registerSaga);
   yield takeLatest(types.VERIFY_TOKEN_REQUEST, verifyTokenSaga);
   yield takeLatest(types.LOGOUT,               logoutSaga);
-  yield takeLatest(types.LOGIN_GOOGLE_REQUEST,  loginGoogleSaga);
+  yield takeLatest(types.GOOGLE_LOGIN_REQUEST,  loginGoogleSaga);
   
 }
