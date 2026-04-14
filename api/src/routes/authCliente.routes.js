@@ -5,17 +5,26 @@ const router = express.Router();
 
 const Cliente = require("../models/cliente");
 
-const JWT_SECRET  = process.env.JWT_SECRET  || "sua_chave_secreta_aqui";
+const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
 const JWT_EXPIRES = process.env.JWT_EXPIRES || "7d";
 
-const { OAuth2Client } = require('google-auth-library');
+const { OAuth2Client } = require("google-auth-library");
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 /* ===============================
    REGISTRO
 =============================== */
 router.post("/register", async (req, res) => {
   try {
-    const { nome, email, senha, telefone, dataNascimento, sexo, documento, endereco } = req.body;
+    const {
+      nome,
+      email,
+      senha,
+      telefone,
+      dataNascimento,
+      sexo,
+      documento,
+      endereco,
+    } = req.body;
 
     if (!nome || !email || !senha || !documento?.tipo || !documento?.numero) {
       return res.status(400).json({
@@ -25,18 +34,16 @@ router.post("/register", async (req, res) => {
     }
 
     const jaExiste = await Cliente.findOne({
-      $or: [
-        { email },
-        { "documento.numero": documento.numero },
-      ],
+      $or: [{ email }, { "documento.numero": documento.numero }],
     });
 
     if (jaExiste) {
       return res.status(400).json({
         error: true,
-        message: jaExiste.email === email
-          ? "E-mail já cadastrado"
-          : "Documento já cadastrado",
+        message:
+          jaExiste.email === email
+            ? "E-mail já cadastrado"
+            : "Documento já cadastrado",
       });
     }
 
@@ -62,16 +69,16 @@ router.post("/register", async (req, res) => {
       error: false,
       token,
       cliente: {
-        _id:            cliente._id,
-        nome:           cliente.nome,
-        email:          cliente.email,
-        foto:           cliente.foto    || null,
-        telefone:       cliente.telefone || null,
+        _id: cliente._id,
+        nome: cliente.nome,
+        email: cliente.email,
+        foto: cliente.foto || null,
+        telefone: cliente.telefone || null,
         dataNascimento: cliente.dataNascimento || null,
-        sexo:           cliente.sexo    || null,
-        documento:      cliente.documento,
-        endereco:       cliente.endereco || null,
-        status:         cliente.status,
+        sexo: cliente.sexo || null,
+        documento: cliente.documento,
+        endereco: cliente.endereco || null,
+        status: cliente.status,
       },
     });
   } catch (err) {
@@ -125,16 +132,16 @@ router.post("/login", async (req, res) => {
       error: false,
       token,
       cliente: {
-        _id:            cliente._id,
-        nome:           cliente.nome,
-        email:          cliente.email,
-        foto:           cliente.foto           || null,
-        telefone:       cliente.telefone        || null,
-        dataNascimento: cliente.dataNascimento  || null,
-        sexo:           cliente.sexo            || null,
-        documento:      cliente.documento,
-        endereco:       cliente.endereco        || null,
-        status:         cliente.status,
+        _id: cliente._id,
+        nome: cliente.nome,
+        email: cliente.email,
+        foto: cliente.foto || null,
+        telefone: cliente.telefone || null,
+        dataNascimento: cliente.dataNascimento || null,
+        sexo: cliente.sexo || null,
+        documento: cliente.documento,
+        endereco: cliente.endereco || null,
+        status: cliente.status,
       },
     });
   } catch (err) {
@@ -151,55 +158,66 @@ router.get("/me", async (req, res) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
-      return res.status(401).json({ error: true, message: "Token não informado" });
+      return res
+        .status(401)
+        .json({ error: true, message: "Token não informado" });
     }
 
-    const token   = authHeader.split(" ")[1];
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const cliente = await Cliente.findById(decoded.id).select("-senha");
     if (!cliente) {
-      return res.status(401).json({ error: true, message: "Cliente não encontrado" });
+      return res
+        .status(401)
+        .json({ error: true, message: "Cliente não encontrado" });
     }
 
     return res.json({ error: false, cliente });
   } catch (err) {
-    res.status(401).json({ error: true, message: "Token inválido ou expirado" });
+    res
+      .status(401)
+      .json({ error: true, message: "Token inválido ou expirado" });
   }
 });
-
 
 /* ===============================
    LOGIN COM GOOGLE
 =============================== */
 router.post("/google", async (req, res) => {
   try {
-    const { idToken } = req.body;
+    const { token } = req.body;
 
-    if (!idToken) {
-      return res.status(400).json({ error: true, message: "Token não informado" });
+    if (!token) {
+      return res
+        .status(400)
+        .json({ error: true, message: "Token não informado" });
     }
 
-    // ── Verifica o token com o Google ────────────────────────────────────
-    const ticket = await googleClient.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    // ── Busca dados do usuário no Google ─────────────────────────────────
+    const googleRes = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${token}`,
+    );
 
-    const { sub: googleId, email, name, picture } = ticket.getPayload();
+    if (!googleRes.ok) {
+      return res
+        .status(401)
+        .json({ error: true, message: "Token Google inválido" });
+    }
+
+    const { sub: googleId, email, name, picture } = await googleRes.json();
 
     // ── Busca ou cria o cliente ──────────────────────────────────────────
     let cliente = await Cliente.findOne({ email });
 
     if (!cliente) {
-      // Cria cliente sem senha (login social)
       cliente = await new Cliente({
-        nome:      name,
+        nome: name,
         email,
-        senha:     await bcrypt.hash(googleId, 10), // senha aleatória, nunca usada
-        foto:      picture || null,
-        status:    "ATIVO",
-        documento: { tipo: "CPF", numero: `GOOGLE_${googleId}` }, // placeholder
+        senha: await bcrypt.hash(googleId, 10),
+        foto: picture || null,
+        status: "ATIVO",
+        documento: { tipo: "CPF", numero: `GOOGLE_${googleId}` },
       }).save();
     }
 
@@ -210,29 +228,35 @@ router.post("/google", async (req, res) => {
       });
     }
 
-    const token = jwt.sign({ id: cliente._id, tipo: "cliente" }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES,
-    });
+    const token_jwt = jwt.sign(
+      { id: cliente._id, tipo: "cliente" },
+      JWT_SECRET,
+      {
+        expiresIn: JWT_EXPIRES,
+      },
+    );
 
     return res.json({
       error: false,
-      token,
+      token: token_jwt,
       cliente: {
-        _id:            cliente._id,
-        nome:           cliente.nome,
-        email:          cliente.email,
-        foto:           cliente.foto           || null,
-        telefone:       cliente.telefone        || null,
-        dataNascimento: cliente.dataNascimento  || null,
-        sexo:           cliente.sexo            || null,
-        documento:      cliente.documento,
-        endereco:       cliente.endereco        || null,
-        status:         cliente.status,
+        _id: cliente._id,
+        nome: cliente.nome,
+        email: cliente.email,
+        foto: cliente.foto || null,
+        telefone: cliente.telefone || null,
+        dataNascimento: cliente.dataNascimento || null,
+        sexo: cliente.sexo || null,
+        documento: cliente.documento,
+        endereco: cliente.endereco || null,
+        status: cliente.status,
       },
     });
   } catch (err) {
     console.error("Erro no login Google:", err);
-    res.status(500).json({ error: true, message: "Erro ao autenticar com Google" });
+    res
+      .status(500)
+      .json({ error: true, message: "Erro ao autenticar com Google" });
   }
 });
 
