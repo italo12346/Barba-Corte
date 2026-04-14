@@ -8,7 +8,7 @@ const SalaoSchema = new Schema(
     capa: { type: String, required: false },
     email: { type: String, required: true, unique: true },
     senha: String,
-    telefone: { type: String, required: true },
+    telefone: { type: String, required: false },
     endereco: {
       logradouro: String,
       cidade: String,

@@ -41,8 +41,8 @@ const clienteSchema = new mongoose.Schema(
     },
 
     documento: {
-      tipo: { type: String, enum: ["CPF", "CNPJ"], required: true },
-      numero: { type: String, required: true, unique: true },
+      tipo: { type: String, enum: ["CPF", "CNPJ"], required: false },
+      numero: { type: String, required: false, unique: true },
     },
     endereco: {
       cidade: String,
