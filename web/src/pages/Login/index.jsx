@@ -92,7 +92,7 @@ const Login = () => {
 
           {/* ✅ Divisor Visual */}
           <div style={{ margin: '20px 0', textAlign: 'center', borderBottom: '1px solid #ddd', lineHeight: '0.1em' }}>
-            <span style={{ background: '#fff', padding: '0 10px', color: '#999', fontSize: '12px' }}>ou</span>
+            <span >ou</span>
           </div>
 
           {/* ✅ Botão do Google */}
