@@ -18,6 +18,25 @@ function* loginSaga({ payload }) {
   }
 }
 
+
+// ✅ NOVA SAGA: LOGIN COM GOOGLE
+function* loginGoogleSaga({ payload }) {
+  try {
+    // Enviamos o token do Google para o seu backend validar
+    const { data } = yield call(api.post, "/auth/google", { token: payload.token });
+
+    // Reaproveitamos a lógica de salvar o token que você já usa
+    localStorage.setItem("token", data.token);
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+
+    // Sucesso: payload contém { token, salao } conforme seu reducer espera
+    yield put({ type: types.LOGIN_SUCCESS, payload: data });
+  } catch (err) {
+    const msg = err?.response?.data?.message || "Erro na autenticação com Google";
+    yield put({ type: types.LOGIN_FAILURE, payload: msg });
+  }
+}
+
 function* registerSaga({ payload }) {
   try {
     const { data } = yield call(api.post, "/auth/register", payload);
@@ -62,5 +81,6 @@ export default function* authSaga() {
   yield takeLatest(types.REGISTER_REQUEST,     registerSaga);
   yield takeLatest(types.VERIFY_TOKEN_REQUEST, verifyTokenSaga);
   yield takeLatest(types.LOGOUT,               logoutSaga);
+  yield takeLatest(types.LOGIN_GOOGLE_REQUEST,  loginGoogleSaga);
   
 }
