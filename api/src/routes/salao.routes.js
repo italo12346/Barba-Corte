@@ -9,11 +9,41 @@ const Salao = require("../models/salao");
 const Servicos = require("../models/servico");
 const Arquivos = require("../models/arquivo");
 
+
+/* ===============================
+   LISTAR SALÕES (COM GEOLOCALIZAÇÃO)
+=============================== */
+router.get("/", async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+
+    // Se o app enviar latitude e longitude, o MongoDB ordena por distância
+    if (lat && lon) {
+      const saloes = await Salao.find({
+        geo: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(lon), parseFloat(lat)], // MongoDB: [longitude, latitude]
+            },
+          },
+        },
+      });
+
+      return res.json({ error: false, saloes });
+    }
+
+    // Caso não tenha localização, lista todos normalmente
+    const saloes = await Salao.find();
+    res.json({ error: false, saloes });
+  } catch (err) {
+    console.error("Erro ao listar salões:", err);
+    res.status(500).json({ error: true, message: "Erro ao listar salões" });
+  }
+});
 /* ===============================
    CRIAR SALÃO
 =============================== */
-
-
 router.post("/upload", async (req, res) => {
   try {
     if (!req.headers["content-type"]?.includes("multipart/form-data")) {
