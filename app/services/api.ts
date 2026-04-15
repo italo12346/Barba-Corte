@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+
 const apiUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 const api = axios.create({
   baseURL: apiUrl,
-});
-// Interceptor para injetar o token em todas as chamadas
+} );
+
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem('@barba-corte:token');
   if (token) {

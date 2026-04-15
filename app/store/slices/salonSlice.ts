@@ -1,15 +1,15 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import api from '../../services/api'; 
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import api from '../../services/api';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 
 export interface Endereco {
-  logradouro?: string;
-  cidade?:     string;
-  uf?:         string;
-  cep?:        string;
-  numero?:     string;
-  pais?:       string;
+  logradouro: string;
+  cidade:     string;
+  uf:         string;
+  cep:        string;
+  numero:     string;
+  pais:       string;
 }
 
 export interface Geo {
@@ -24,26 +24,40 @@ export interface Salon {
   capa?:     string;
   email:     string;
   telefone:  string;
-  endereco?: Endereco;
-  geo?:      Geo;
+  endereco:  Endereco;
+  geo:       Geo;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface Arquivo {
+  _id:            string;
+  referenciaId:   string;
+  model:          string;
+  nome:           string;
+  caminhoArquivo: string;
+  tipoMime:       string;
+  tamanho:        number;
+}
+
 export interface Servico {
-  id:     string;
-  titulo: string;
+  id:          string;
+  _id?:        string; 
+  titulo:      string;
+  preco?:      number;
+  duracao?:    number;
+  arquivos?:   Arquivo[];
+  descricao?:  string;
+  status?:     string;
 }
 
 interface SalonState {
   salons:        Salon[];
   selectedSalon: Salon | null;
-  servicos:      Servico[];   // 👈 lista de serviços do salão selecionado
+  servicos:      Servico[];
   loading:       boolean;
   error:         string | null;
 }
-
-// ── Initial State ─────────────────────────────────────────────────────────────
 
 const initialState: SalonState = {
   salons:        [],
@@ -55,31 +69,28 @@ const initialState: SalonState = {
 
 // ── Thunks ────────────────────────────────────────────────────────────────────
 
-/** GET /salao/perfil/:id — busca perfil completo do salão */
-export const fetchSalonById = createAsyncThunk(
-  'salon/fetchById',
-  async (id: string, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(`/salao/perfil/${id}`);
-      if (data.error) throw new Error(data.message);
-      return data.salao as Salon;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
+export const fetchSalons = createAsyncThunk(
+  'salon/fetchSalons',
+  async ({ lat, lon }: { lat: number; lon: number }) => {
+    const response = await api.get(`/salao?lat=${lat}&lon=${lon}`);
+    return response.data.saloes;
   }
 );
 
-/** GET /salao/servico/:salaoId — busca serviços ativos do salão */
+export const fetchSalonById = createAsyncThunk(
+  'salon/fetchSalonById',
+  async (id: string) => {
+    const response = await api.get(`/salao/perfil/${id}`);
+    return response.data.salao;
+  }
+);
+
 export const fetchSalonServicos = createAsyncThunk(
-  'salon/fetchServicos',
-  async (salaoId: string, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(`/salao/servico/${salaoId}`);
-      if (data.error) throw new Error(data.message);
-      return data.servicos as Servico[];
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
+  'salon/fetchSalonServicos',
+  async (salaoId: string) => {
+    const response = await api.get(`/salao/servico/${salaoId}`);
+    // ✅ Retornamos o array de serviços completo que vem da API
+    return response.data.servicos;
   }
 );
 
@@ -89,50 +100,54 @@ const salonSlice = createSlice({
   name: 'salon',
   initialState,
   reducers: {
-    selectSalon: (state, action: PayloadAction<Salon>) => {
-      state.selectedSalon = action.payload;
-    },
     clearSelectedSalon: (state) => {
       state.selectedSalon = null;
-      state.servicos      = []; 
-    },
-    clearError: (state) => {
-      state.error = null;
+      state.servicos = [];
     },
   },
   extraReducers: (builder) => {
-
-    // ── fetchSalonById ───────────────────────────────────────────────────
     builder
+      // Fetch Salons
+      .addCase(fetchSalons.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchSalons.fulfilled, (state, action) => {
+        state.loading = false;
+        state.salons = action.payload;
+      })
+      .addCase(fetchSalons.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Erro ao buscar salões';
+      })
+      
+      // Fetch Salon By Id
       .addCase(fetchSalonById.pending, (state) => {
         state.loading = true;
-        state.error   = null;
       })
       .addCase(fetchSalonById.fulfilled, (state, action) => {
-        state.loading       = false;
+        state.loading = false;
         state.selectedSalon = action.payload;
       })
-      .addCase(fetchSalonById.rejected, (state, action) => {
-        state.loading = false;
-        state.error   = action.payload as string;
-      });
-
-    // ── fetchSalonServicos ───────────────────────────────────────────────
-    builder
+      
+      // Fetch Salon Servicos
       .addCase(fetchSalonServicos.pending, (state) => {
         state.loading = true;
-        state.error   = null;
       })
       .addCase(fetchSalonServicos.fulfilled, (state, action) => {
-        state.loading  = false;
-        state.servicos = action.payload;
+        state.loading = false;
+        // ✅ SALVANDO O OBJETO COMPLETO:
+        // Se a sua API retorna o ID como _id, vamos normalizar para id
+        state.servicos = action.payload.map((s: any) => ({
+          ...s,
+          id: s._id || s.id // Garante que o campo 'id' exista para o componente
+        }));
       })
       .addCase(fetchSalonServicos.rejected, (state, action) => {
         state.loading = false;
-        state.error   = action.payload as string;
+        state.error = action.error.message || 'Erro ao buscar serviços';
       });
   },
 });
 
-export const { selectSalon, clearSelectedSalon, clearError } = salonSlice.actions;
+export const { clearSelectedSalon } = salonSlice.actions;
 export default salonSlice.reducer;
