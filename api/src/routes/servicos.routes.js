@@ -13,9 +13,13 @@ const Arquivos = require('../models/arquivo');
    para o Express não interpretar "servico"
    como um parâmetro de rota dinâmico.
 ====================================== */
-router.get('/servico', async (req, res) => {
+router.get('/servico/:salaoId', async (req, res) => {
   try {
-    const salaoId = req.salaoId;
+    const { salaoId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(salaoId)) {
+      return res.status(400).json({ error: true, message: 'ID do salão inválido' });
+    }
 
     const servicos = await Servicos.find({
       salaoId,
@@ -43,9 +47,11 @@ router.get('/servico', async (req, res) => {
     });
 
   } catch (err) {
+    console.error("Erro ao buscar serviços:", err);
     res.status(500).json({ error: true, message: 'Erro ao buscar serviços' });
   }
 });
+
 
 /* ======================================
    CREATE / UPDATE COM UPLOAD

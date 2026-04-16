@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, Text, StyleSheet, Image, ActivityIndicator, 
-  TouchableOpacity, ScrollView, RefreshControl, SafeAreaView,
-  StatusBar
-} from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { MaterialIcons, Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl, SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import api from '../../services/api';
 import { Salon } from '../../store/slices/salonSlice';
 
@@ -16,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [displayAddress, setDisplayAddress] = useState<string>('Buscando localização...');
 
   const loadSaloes = async () => {
     try {
@@ -28,6 +35,31 @@ export default function Home() {
 
       let userLocation = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = userLocation.coords;
+
+      // Reverse geocoding usando Nominatim (OpenStreetMap) - Mais estável que o nativo no SDK 49
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+          {
+            headers: {
+              'User-Agent': 'BarbeariaApp/1.0'
+            }
+          }
+        );
+        const dataAddr = await response.json();
+        
+        if (dataAddr && dataAddr.address) {
+          const { road, suburb, city, town, village } = dataAddr.address;
+          const streetName = road || suburb || '';
+          const cityName = city || town || village || '';
+          setDisplayAddress(`${streetName}${streetName && cityName ? ', ' : ''}${cityName}`);
+        } else {
+          setDisplayAddress('Localização identificada');
+        }
+      } catch (geoError) {
+        console.error("Erro no geocoding:", geoError);
+        setDisplayAddress('Localização Atual (GPS)');
+      }
 
       const { data } = await api.get(`/salao?lat=${latitude}&lon=${longitude}`);
 
@@ -74,7 +106,7 @@ export default function Home() {
           <Text style={styles.addressLabel}>Sua Localização</Text>
           <View style={styles.addressRow}>
             <Ionicons name="location" size={16} color="#6b21a8" />
-            <Text style={styles.addressText} numberOfLines={1}>📍 Localização Atual (GPS)</Text>
+            <Text style={styles.addressText} numberOfLines={1}>📍 {displayAddress}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.profileBtn}>

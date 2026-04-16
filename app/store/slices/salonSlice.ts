@@ -41,6 +41,7 @@ export interface Arquivo {
 }
 
 export interface Servico {
+  foto: string | undefined;
   id:          string;
   _id?:        string; 
   titulo:      string;
@@ -88,7 +89,7 @@ export const fetchSalonById = createAsyncThunk(
 export const fetchSalonServicos = createAsyncThunk(
   'salon/fetchSalonServicos',
   async (salaoId: string) => {
-    const response = await api.get(`/salao/servico/${salaoId}`);
+    const response = await api.get(`/servicos/servico/${salaoId}`);
     // ✅ Retornamos o array de serviços completo que vem da API
     return response.data.servicos;
   }
