@@ -1,37 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, Text, StyleSheet, Image, ActivityIndicator, 
-  TouchableOpacity, ScrollView, RefreshControl, SafeAreaView 
-} from 'react-native';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import { MaterialIcons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  RefreshControl, SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import api from '../../services/api';
-
-// ✅ 1. Definir a interface para o TypeScript entender o seu Schema
-interface Salao {
-  _id: string;
-  nome: string;
-  foto?: string;
-  capa?: string;
-  endereco: {
-    logradouro: string;
-    numero: string;
-    cidade: string;
-    uf: string;
-  };
-}
+import { Salon } from '../../store/slices/salonSlice';
 
 export default function Home() {
   const router = useRouter();
-  
-  // ✅ 2. Tipar o estado como um array de Salao
-  const [saloes, setSaloes] = useState<Salao[]>([]);
+  const [saloes, setSaloes] = useState<Salon[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  // ✅ 3. Tipar o erro como string ou null
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [displayAddress, setDisplayAddress] = useState<string>('Buscando localização...');
 
   const loadSaloes = async () => {
     try {
@@ -44,6 +35,31 @@ export default function Home() {
 
       let userLocation = await Location.getCurrentPositionAsync({});
       const { latitude, longitude } = userLocation.coords;
+
+      // Reverse geocoding usando Nominatim (OpenStreetMap) - Mais estável que o nativo no SDK 49
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+          {
+            headers: {
+              'User-Agent': 'BarbeariaApp/1.0'
+            }
+          }
+        );
+        const dataAddr = await response.json();
+        
+        if (dataAddr && dataAddr.address) {
+          const { road, suburb, city, town, village } = dataAddr.address;
+          const streetName = road || suburb || '';
+          const cityName = city || town || village || '';
+          setDisplayAddress(`${streetName}${streetName && cityName ? ', ' : ''}${cityName}`);
+        } else {
+          setDisplayAddress('Localização identificada');
+        }
+      } catch (geoError) {
+        console.error("Erro no geocoding:", geoError);
+        setDisplayAddress('Localização Atual (GPS)');
+      }
 
       const { data } = await api.get(`/salao?lat=${latitude}&lon=${longitude}`);
 
@@ -82,24 +98,44 @@ export default function Home() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView 
-        style={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {setRefreshing(true); loadSaloes();}} />}
-      >
-        <View style={styles.header}>
+      <StatusBar barStyle="light-content" backgroundColor="#1a0a2e" />
+      
+      {/* Header Premium */}
+      <View style={styles.header}>
+        <View>
           <Text style={styles.addressLabel}>Sua Localização</Text>
           <View style={styles.addressRow}>
-            <MaterialIcons name="location-on" size={18} color="#6b21a8" />
-            <Text style={styles.addressText} numberOfLines={1}>📍 Localização Atual (GPS)</Text>
+            <Ionicons name="location" size={16} color="#6b21a8" />
+            <Text style={styles.addressText} numberOfLines={1}>📍 {displayAddress}</Text>
           </View>
         </View>
+        <TouchableOpacity style={styles.profileBtn}>
+          <Ionicons name="person-circle-outline" size={32} color="#6b21a8" />
+        </TouchableOpacity>
+      </View>
 
+      <ScrollView 
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={() => {setRefreshing(true); loadSaloes();}} 
+            tintColor="#6b21a8"
+          />
+        }
+      >
+        {/* Destaque: O Mais Próximo */}
         {saloes.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>O Mais Próximo de Você 📍</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>O Mais Próximo de Você</Text>
+              <MaterialIcons name="stars" size={20} color="#6b21a8" />
+            </View>
+            
             <TouchableOpacity 
               style={styles.cardDestaque}
-              // ✅ 4. Ajuste na navegação (usando 'as any' se o router reclamar da rota dinâmica)
+              activeOpacity={0.9}
               onPress={() => router.push(`/(tabs)/salao/${saloes[0]._id}` as any)}
             >
               <Image 
@@ -107,72 +143,132 @@ export default function Home() {
                 style={styles.fotoDestaque} 
               />
               <View style={styles.infoDestaque}>
-                <Text style={styles.nomeDestaque}>{saloes[0].nome}</Text>
+                <View style={styles.nomeRow}>
+                  <Text style={styles.nomeDestaque}>{saloes[0].nome}</Text>
+                  <View style={styles.notaBadge}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                    <Text style={styles.notaText}>4.9</Text>
+                  </View>
+                </View>
+                
                 <View style={styles.badgeDistancia}>
                   <MaterialIcons name="directions-walk" size={14} color="#6b21a8" />
                   <Text style={styles.distanciaText}>Destaque por proximidade</Text>
                 </View>
+                
                 <Text style={styles.enderecoText}>
-                  {saloes[0].endereco.logradouro}, {saloes[0].endereco.numero}
+                  {saloes[0].endereco?.logradouro}, {saloes[0].endereco?.numero}
                 </Text>
               </View>
             </TouchableOpacity>
           </View>
-         )}
+        )}
 
-        <Text style={styles.sectionTitle}>Explorar Barbearias</Text>
-        {saloes.map((item, index) => (
-          <TouchableOpacity 
-            key={item._id} 
-            style={styles.cardComum}
-            onPress={() => router.push(`/(tabs)/salao/${item._id}` as any)}
-          >
-            <Image 
-              source={{ uri: item.foto || 'https://via.placeholder.com/100' }} 
-              style={styles.fotoComum} 
-            />
-            <View style={styles.infoComum}>
-              <Text style={styles.nomeComum}>{item.nome}</Text>
-              <Text style={styles.subText}>
-                {item.endereco.cidade} • {item.endereco.uf}
-              </Text>
-              <Text style={styles.distanciaSubText}>📍 {index === 0 ? 'Mais próximo' : 'Disponível para agendamento'}</Text>
-            </View>
-            <MaterialIcons name="chevron-right" size={24} color="#CCC" />
-          </TouchableOpacity>
-         ))}
+        {/* Lista Completa */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Explorar Barbearias</Text>
+          {saloes.map((item, index) => (
+            <TouchableOpacity 
+              key={item._id} 
+              style={styles.cardComum}
+              activeOpacity={0.7}
+              onPress={() => router.push(`/(tabs)/salao/${item._id}` as any)}
+            >
+              <Image 
+                source={{ uri: item.foto || 'https://via.placeholder.com/100' }} 
+                style={styles.fotoComum} 
+              />
+              <View style={styles.infoComum}>
+                <Text style={styles.nomeComum}>{item.nome}</Text>
+                <Text style={styles.subText}>
+                  {item.endereco?.cidade} • {item.endereco?.uf}
+                </Text>
+                <View style={styles.distanciaRow}>
+                  <Ionicons name="navigate-circle" size={14} color="#6b21a8" />
+                  <Text style={styles.distanciaSubText}>
+                    {index === 0 ? 'Mais próximo de você' : 'Disponível para agendamento'}
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color="#E0E0E0" />
+            </TouchableOpacity>
+          ))}
+        </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#FFF' },
-  container: { flex: 1 },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  loadingText: { marginTop: 10, color: '#666', fontWeight: '500' },
-  errorText: { marginTop: 10, color: '#ff4444', textAlign: 'center', fontSize: 16 },
-  retryBtn: { marginTop: 20, backgroundColor: '#6b21a8', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  retryBtnText: { color: '#FFF', fontWeight: 'bold' },
-  header: { padding: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
-  addressLabel: { fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: 1 },
+  safeArea: { flex: 1, backgroundColor: '#1a0a2e' },
+  container: { flex: 1, backgroundColor: '#F8F9FD', borderTopLeftRadius: 30, borderTopRightRadius: 30 },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8F9FD' },
+  loadingText: { marginTop: 12, color: '#6b21a8', fontWeight: '600', fontSize: 14 },
+  errorText: { marginTop: 10, color: '#ff4444', textAlign: 'center', fontSize: 16, fontWeight: '500' },
+  retryBtn: { marginTop: 20, backgroundColor: '#6b21a8', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, elevation: 4 },
+  retryBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+  
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 24, 
+    paddingVertical: 20, 
+    backgroundColor: '#1a0a2e' 
+  },
+  addressLabel: { fontSize: 10, color: '#c4b8d8', textTransform: 'uppercase', letterSpacing: 1.5, fontWeight: '700' },
   addressRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  addressText: { fontSize: 14, fontWeight: 'bold', marginLeft: 4, color: '#333' },
-  section: { padding: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginHorizontal: 20, marginBottom: 15, color: '#1a0a2e', marginTop: 10 },
-  cardDestaque: { backgroundColor: '#FFF', borderRadius: 16, elevation: 8, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 12, overflow: 'hidden' },
-  fotoDestaque: { width: '100%', height: 180 },
-  infoDestaque: { padding: 15 },
-  nomeDestaque: { fontSize: 22, fontWeight: 'bold', color: '#1a0a2e' },
-  badgeDistancia: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3e8ff', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginTop: 8 },
-  distanciaText: { color: '#6b21a8', fontWeight: 'bold', fontSize: 12, marginLeft: 4 },
-  enderecoText: { color: '#777', fontSize: 13, marginTop: 10 },
-  cardComum: { flexDirection: 'row', padding: 15, marginHorizontal: 20, backgroundColor: '#FFF', borderRadius: 14, marginBottom: 12, alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#F8F8F8' },
-  fotoComum: { width: 65, height: 65, borderRadius: 12 },
-  infoComum: { flex: 1, marginLeft: 15 },
-  nomeComum: { fontSize: 17, fontWeight: 'bold', color: '#333' },
-  subText: { color: '#888', fontSize: 13, marginTop: 2 },
-  distanciaSubText: { color: '#6b21a8', fontSize: 12, fontWeight: '600', marginTop: 4 }
+  addressText: { fontSize: 14, fontWeight: '600', marginLeft: 6, color: '#FFF' },
+  profileBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(107, 33, 168, 0.1)', justifyContent: 'center', alignItems: 'center' },
+  
+  section: { paddingHorizontal: 24, marginTop: 24 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '800', color: '#1a0a2e', marginRight: 8 },
+  
+  cardDestaque: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 24, 
+    elevation: 10, 
+    shadowColor: '#6b21a8', 
+    shadowOpacity: 0.15, 
+    shadowRadius: 20, 
+    shadowOffset: { width: 0, height: 10 },
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#F0F0F0'
+  },
+  fotoDestaque: { width: '100%', height: 190 },
+  infoDestaque: { padding: 20 },
+  nomeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  nomeDestaque: { fontSize: 22, fontWeight: '800', color: '#1a0a2e', flex: 1 },
+  notaBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF9E6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  notaText: { fontSize: 12, fontWeight: '700', color: '#FFB800', marginLeft: 4 },
+  
+  badgeDistancia: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f3e8ff', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, marginTop: 12 },
+  distanciaText: { color: '#6b21a8', fontWeight: '700', fontSize: 12, marginLeft: 6 },
+  enderecoText: { color: '#7D7D7D', fontSize: 13, marginTop: 12, lineHeight: 18 },
+  
+  cardComum: { 
+    flexDirection: 'row', 
+    padding: 16, 
+    backgroundColor: '#FFF', 
+    borderRadius: 20, 
+    marginBottom: 16, 
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    borderWidth: 1,
+    borderColor: '#F5F5F5'
+  },
+  fotoComum: { width: 70, height: 70, borderRadius: 16, backgroundColor: '#F0F0F0' },
+  infoComum: { flex: 1, marginLeft: 16 },
+  nomeComum: { fontSize: 17, fontWeight: '700', color: '#1a0a2e' },
+  subText: { color: '#9E9E9E', fontSize: 13, marginTop: 4 },
+  distanciaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
+  distanciaSubText: { color: '#6b21a8', fontSize: 12, fontWeight: '700', marginLeft: 4 }
 });

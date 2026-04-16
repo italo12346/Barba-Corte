@@ -1,9 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
-import * as Google from 'expo-auth-session/providers/google';
-import { ResponseType } from 'expo-auth-session';
-import { router } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import React, { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import * as Google from "expo-auth-session/providers/google";
+import { router } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -15,40 +14,42 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { clearError, loginCliente, loginGoogle } from '../../store/slices/authSlice';
+} from "react-native";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import {
+  clearError,
+  loginCliente,
+  loginGoogle,
+} from "../../store/slices/authSlice";
 
 WebBrowser.maybeCompleteAuthSession();
-
-const WEB_CLIENT_ID     = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!;
-const ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID!;
 
 export default function LoginScreen() {
   const dispatch = useAppDispatch();
   const { loading, error } = useAppSelector((state) => state.auth);
 
-  const [email,        setEmail]        = useState('');
-  const [senha,        setSenha]        = useState('');
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
   // ── Google Auth ──────────────────────────────────────────────────────────────
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId:     WEB_CLIENT_ID,
-    androidClientId: ANDROID_CLIENT_ID,
-    responseType:    ResponseType.Token, // ✅ garante que accessToken vem no response
-    scopes:          ['openid', 'profile', 'email'],
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    // Opcional: Se der erro de redirect no Expo Go, adicione esta linha:
+    // redirectUri: AuthSession.makeRedirectUri({ scheme: 'app' }),
   });
 
   useEffect(() => {
-    if (response?.type === 'success') {
+    if (response?.type === "success") {
       // ✅ accessToken — usado para buscar dados na /oauth2/v3/userinfo no backend
-      const token = response.authentication?.accessToken ?? response.params?.access_token;
+      const token =
+        response.authentication?.accessToken ?? response.params?.access_token;
       if (!token) return;
 
       dispatch(loginGoogle(token)).then((result) => {
         if (loginGoogle.fulfilled.match(result)) {
-          router.replace('/(tabs)');
+          router.replace("/(tabs)");
         }
       });
     }
@@ -59,7 +60,7 @@ export default function LoginScreen() {
     if (!email || !senha) return;
     const result = await dispatch(loginCliente({ email, senha }));
     if (loginCliente.fulfilled.match(result)) {
-      router.replace('/(tabs)');
+      router.replace("/(tabs)");
     }
   };
 
@@ -76,8 +77,8 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'android' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'android' ? 0 : 20}
+      behavior={Platform.OS === "android" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "android" ? 0 : 20}
     >
       <ScrollView
         contentContainerStyle={styles.scroll}
@@ -86,11 +87,10 @@ export default function LoginScreen() {
         bounces={false}
       >
         <View style={styles.card}>
-
           {/* Logo */}
           <View style={styles.logoWrap}>
             <Image
-              source={require('../../assets/images/logo.png')}
+              source={require("../../assets/images/logo.png")}
               style={styles.logo}
               resizeMode="cover"
             />
@@ -129,7 +129,7 @@ export default function LoginScreen() {
                 onPress={() => setMostrarSenha((v) => !v)}
               >
                 <Ionicons
-                  name={mostrarSenha ? 'eye-off-outline' : 'eye-outline'}
+                  name={mostrarSenha ? "eye-off-outline" : "eye-outline"}
                   size={20}
                   color="#888"
                 />
@@ -162,13 +162,16 @@ export default function LoginScreen() {
 
           {/* Botão Google */}
           <TouchableOpacity
-            style={[styles.btnGoogle, (!request || loading) && styles.btnDesabilitado]}
+            style={[
+              styles.btnGoogle,
+              (!request || loading) && styles.btnDesabilitado,
+            ]}
             onPress={() => promptAsync()}
             disabled={!request || loading}
             activeOpacity={0.85}
           >
             <Image
-              source={{ uri: 'https://www.google.com/favicon.ico' }}
+              source={{ uri: "https://www.google.com/favicon.ico" }}
               style={styles.googleIcon}
             />
             <Text style={styles.btnGoogleTexto}>Continuar com Google</Text>
@@ -177,11 +180,10 @@ export default function LoginScreen() {
           {/* Cadastro */}
           <View style={styles.rodape}>
             <Text style={styles.rodapeTexto}>Não tem conta? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/cadastro')}>
+            <TouchableOpacity onPress={() => router.push("/(auth)/cadastro")}>
               <Text style={styles.linkCadastro}>Cadastrar</Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -191,123 +193,123 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a0a2e',
+    backgroundColor: "#1a0a2e",
   },
   scroll: {
     flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 24,
   },
   card: {
-    backgroundColor: '#e8e6f0',
+    backgroundColor: "#e8e6f0",
     borderRadius: 20,
     padding: 32,
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    alignItems: 'center',
+    alignItems: "center",
   },
   logoWrap: {
     width: 120,
     height: 120,
     borderRadius: 14,
-    overflow: 'hidden',
-    backgroundColor: '#111',
+    overflow: "hidden",
+    backgroundColor: "#111",
     marginBottom: 20,
   },
   logo: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   titulo: {
     fontSize: 26,
-    fontWeight: '700',
-    color: '#1a1a2e',
+    fontWeight: "700",
+    color: "#1a1a2e",
     marginBottom: 4,
   },
   subtitulo: {
     fontSize: 14,
-    color: '#6b3fa0',
+    color: "#6b3fa0",
     marginBottom: 28,
   },
   campo: {
-    width: '100%',
+    width: "100%",
     marginBottom: 14,
   },
   label: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#2a2a3a',
+    fontWeight: "500",
+    color: "#2a2a3a",
     marginBottom: 6,
   },
   input: {
-    width: '100%',
+    width: "100%",
     height: 46,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 14,
-    color: '#1a1a2e',
+    color: "#1a1a2e",
   },
   inputWrap: {
-    position: 'relative',
+    position: "relative",
   },
   eyeBtn: {
-    position: 'absolute',
+    position: "absolute",
     right: 12,
     top: 13,
   },
   erro: {
-    color: '#c0392b',
+    color: "#c0392b",
     fontSize: 13,
     marginBottom: 8,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   btnEntrar: {
-    width: '100%',
+    width: "100%",
     height: 48,
-    backgroundColor: '#6b21a8',
+    backgroundColor: "#6b21a8",
     borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 8,
   },
   btnDesabilitado: {
     opacity: 0.7,
   },
   btnTexto: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 0.5,
   },
   divisorWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
     marginVertical: 16,
     gap: 8,
   },
   divisorLinha: {
     flex: 1,
     height: 1,
-    backgroundColor: '#c4b8d8',
+    backgroundColor: "#c4b8d8",
   },
   divisorTexto: {
     fontSize: 12,
-    color: '#888',
+    color: "#888",
   },
   btnGoogle: {
-    width: '100%',
+    width: "100%",
     height: 48,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   googleIcon: {
     width: 20,
@@ -315,21 +317,21 @@ const styles = StyleSheet.create({
   },
   btnGoogleTexto: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
   rodape: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 20,
   },
   rodapeTexto: {
     fontSize: 13,
-    color: '#555',
+    color: "#555",
   },
   linkCadastro: {
     fontSize: 13,
-    color: '#6b21a8',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+    color: "#6b21a8",
+    fontWeight: "500",
+    textDecorationLine: "underline",
   },
 });
