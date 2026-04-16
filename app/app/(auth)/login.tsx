@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Google from "expo-auth-session/providers/google";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from 'expo-auth-session';
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,8 +37,7 @@ export default function LoginScreen() {
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-    // Opcional: Se der erro de redirect no Expo Go, adicione esta linha:
-    // redirectUri: AuthSession.makeRedirectUri({ scheme: 'app' }),
+    redirectUri: AuthSession.makeRedirectUri({ scheme: 'app' }),
   });
 
   useEffect(() => {

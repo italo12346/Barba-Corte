@@ -13,6 +13,47 @@ const Arquivos = require('../models/arquivo');
    para o Express não interpretar "servico"
    como um parâmetro de rota dinâmico.
 ====================================== */
+
+/* ======================================
+   LISTAR SERVIÇOS DO SALÃO
+   IMPORTANTE: deve vir ANTES de /:servicoId
+   para o Express não interpretar "servico"
+   como um parâmetro de rota dinâmico.
+====================================== */
+router.get('/servico', async (req, res) => {
+  try {
+    const salaoId = req.salaoId;
+
+    const servicos = await Servicos.find({
+      salaoId,
+      status: 'A'
+    });
+
+    const resultado = [];
+
+    for (const servico of servicos) {
+      const arquivos = await Arquivos.find({
+        model: 'Servico',
+        referenciaId: servico._id
+      });
+
+      resultado.push({
+        ...servico.toObject(),
+        arquivos
+      });
+    }
+
+    res.json({
+      error: false,
+      total: resultado.length,
+      servicos: resultado
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: true, message: 'Erro ao buscar serviços' });
+  }
+});
+
 router.get('/servico/:salaoId', async (req, res) => {
   try {
     const { salaoId } = req.params;
