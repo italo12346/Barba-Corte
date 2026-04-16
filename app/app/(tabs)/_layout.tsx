@@ -21,6 +21,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+<<<<<<< Updated upstream
         }}
       />
       <Tabs.Screen
@@ -30,6 +31,31 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}
       />
+=======
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Explore',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
+        name="perfil"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
+        }}
+      />
+
+      {/* ✅ Esconde o salão da tab bar — a navegação é gerenciada pelo Stack do Root */}
+      <Tabs.Screen
+        name="salao/[id]"
+        options={{ href: null }}
+      />
+>>>>>>> Stashed changes
     </Tabs>
   );
 }
