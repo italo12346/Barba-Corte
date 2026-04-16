@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const moment = require("moment");
-
+const bcrypt = require("bcrypt");
 const router = express.Router();
 
 const Cliente = require("../models/cliente");
@@ -36,8 +36,11 @@ router.post("/", async (req, res) => {
     let clienteId;
 
     if (!existentClient) {
+      const senhaHash = await bcrypt.hash(cliente.senha, 10);
+
       const novoCliente = await new Cliente({
         ...cliente,
+        senha: senhaHash,
         mercadoPago: { customerId: null },
       }).save({ session });
 
@@ -170,7 +173,6 @@ router.delete("/vinculo/:id", async (req, res) => {
 UPLOAD FOTO CLIENTE (CREATE + UPDATE)
 ========================================
 */
-
 router.post("/upload", async (req, res) => {
   try {
     if (!req.headers["content-type"]?.includes("multipart/form-data")) {
@@ -240,7 +242,6 @@ router.post("/upload", async (req, res) => {
       try {
         let { clienteId, cliente } = fields;
         const salaoId = req.salaoId;
-        fields;
 
         console.log("FIELDS:", fields);
 
@@ -262,8 +263,11 @@ router.post("/upload", async (req, res) => {
             throw new Error("Dados insuficientes para criação");
           }
 
+          const senhaHash = await bcrypt.hash(cliente.senha, 10);
+
           clienteDoc = await Cliente.create({
             ...cliente,
+            senha: senhaHash,
             mercadoPago: { customerId: null },
           });
 
@@ -274,15 +278,18 @@ router.post("/upload", async (req, res) => {
           });
         } else {
           /*
-        ========================================
-        UPDATE
-        ========================================
-        */
+          ========================================
+          UPDATE
+          ========================================
+          */
           if (!mongoose.Types.ObjectId.isValid(clienteId)) {
             throw new Error("ID inválido");
           }
 
-          clienteDoc = await Cliente.findByIdAndUpdate(clienteId, cliente, {
+          const dadosUpdate = { ...cliente };
+          delete dadosUpdate.senha;
+
+          clienteDoc = await Cliente.findByIdAndUpdate(clienteId, dadosUpdate, {
             new: true,
           });
 
@@ -392,4 +399,5 @@ router.post("/upload", async (req, res) => {
     });
   }
 });
+
 module.exports = router;
