@@ -13,7 +13,15 @@ module.exports = (req, res, next) => {
   try {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.salaoId = decoded.id; // disponível em todas as rotas protegidas
+    
+    console.log('>>> decoded:', decoded);
+    console.log('>>> headers:', req.headers);
+    console.log('>>> req.salaoId resultado:', decoded.tipo === 'salao' ? decoded.id : req.headers['salaoid']);
+    
+    req.salaoId = decoded.tipo === 'salao' 
+      ? decoded.id 
+      : req.headers['salaoid'];
+
     next();
   } catch {
     return res.status(401).json({ error: true, message: "Token inválido ou expirado" });

@@ -21,16 +21,6 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-          <Stack.Screen
-            name="salao/[id]"
-            options={{
-              title: "Barbearia",
-              headerTitleStyle: { fontWeight: "800", color: "#1a0a2e" },
-              headerTintColor: "#6b21a8",
-              headerBackTitle: "Voltar",
-            }}
-          />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

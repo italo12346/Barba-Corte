@@ -14,13 +14,6 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
-// Interceptor para injetar o token em todas as chamadas
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem('@barba-corte:token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+
 
 export default api;
