@@ -37,6 +37,7 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; color: string; bg: string }
 > = {
+  pendente: { label: "Pendente", color: "#f59e0b", bg: "#fef3c7" },
   confirmado: { label: "Confirmado", color: "#16a34a", bg: "#dcfce7" },
   concluido: { label: "Concluído", color: "#6b21a8", bg: "#f3e8ff" },
   cancelado: { label: "Cancelado", color: "#dc2626", bg: "#fee2e2" },
@@ -412,7 +413,7 @@ export default function Perfil() {
             ) : (
               historico.map((ag, index) => {
                 const cfg =
-                  STATUS_CONFIG[ag.status] ?? STATUS_CONFIG["confirmado"];
+                  STATUS_CONFIG[ag.status] ?? STATUS_CONFIG["pendente"];
                 return (
                   <View key={ag._id ?? index} style={styles.agCard}>
                     <View style={styles.agLeft}>
